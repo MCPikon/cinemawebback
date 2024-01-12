@@ -2,7 +2,7 @@
 
 [![Java](https://img.shields.io/badge/Java-17%2B-saddlebrown?style=for-the-badge&logo=openjdk&logoColor=white&labelColor=101010)](https://docs.oracle.com/en/java/index.html) &nbsp;
 [![Spring Boot](https://img.shields.io/badge/spring%20boot-3.2.1%2B-%236DB33F?style=for-the-badge&logo=springboot&logoColor=white&labelColor=101010)](https://spring.io/projects/spring-boot) &nbsp;
-[![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-00684A?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=101010)](https://www.mongodb.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-00684A?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=101010)](https://www.mongodb.com) &nbsp;
 [![Static Badge](https://img.shields.io/badge/Swagger-OAS3-%2385EA2D?style=for-the-badge&logo=swagger&logoColor=%23FFFFFF&labelColor=%23000000)](https://swagger.io/)
 
 ## Autor
