@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Movies", description = "Movies management API endpoints.")
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/movies")
 public class MovieController {
@@ -38,6 +40,7 @@ public class MovieController {
         try {
             return new ResponseEntity<>(movieService.findAll(), HttpStatus.OK);
         } catch (ErrorException e) {
+            log.error(String.format("Error in movies /findAll [%s]", e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
@@ -53,6 +56,7 @@ public class MovieController {
         try {
             return new ResponseEntity<>(movieService.findById(id), HttpStatus.OK);
         } catch (ErrorException e) {
+            log.error(String.format("Error in movies /findById with id: \"%s\" [%s]", id, e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
@@ -68,6 +72,7 @@ public class MovieController {
         try {
             return new ResponseEntity<>(movieService.findByImdbId(imdbId), HttpStatus.OK);
         } catch (ErrorException e) {
+            log.error(String.format("Error in movies /findById with imdbId: \"%s\" [%s]", imdbId, e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
