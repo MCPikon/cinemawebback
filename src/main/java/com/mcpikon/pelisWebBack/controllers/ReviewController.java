@@ -132,4 +132,20 @@ public class ReviewController {
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
+
+    @Operation(summary = "Patch review by id", description = "Patch a review with the fields and id key passed")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful Operation",
+                    content = { @Content(schema = @Schema(implementation = Map.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
+    })
+    @PatchMapping("/patch/{id}")
+    public ResponseEntity<?> patch(@PathVariable ObjectId id, @RequestBody Map<String, String> fields) {
+        try {
+            return new ResponseEntity<>(reviewService.patch(id, fields), HttpStatus.OK);
+        } catch (ErrorException e) {
+            log.error(String.format("Error in reviews /patch with id: \"%s\" [%s]", id, e.getIdStatus()));
+            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
+        }
+    }
 }

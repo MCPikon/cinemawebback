@@ -16,13 +16,13 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -92,7 +92,21 @@ public class ReviewServiceImpl implements ReviewService {
         reviewToUpdate.setUpdatedAt(LocalDateTime.now());
         reviewToUpdate.setTitle(title);
         reviewToUpdate.setBody(body);
-        reviewRepo.save(reviewToUpdate);
-        return reviewToUpdate;
+        return reviewRepo.save(reviewToUpdate);
+    }
+
+    @Override
+    public Review patch(ObjectId id, Map<String, String> fields) throws ErrorException {
+        log.info("PATCH reviews /patch executed");
+        if (!reviewRepo.existsById(id)) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        Review reviewToPatch = reviewRepo.findById(id).orElseThrow();
+        fields.forEach((key, value) -> {
+            Field field = ReflectionUtils.findField(Review.class, key);
+            if (field != null) {
+                field.setAccessible(true);
+                ReflectionUtils.setField(field, reviewToPatch, value);
+            }
+        });
+        return reviewRepo.save(reviewToPatch);
     }
 }

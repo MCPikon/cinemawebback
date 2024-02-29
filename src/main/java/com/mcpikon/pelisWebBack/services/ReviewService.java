@@ -15,4 +15,5 @@ public interface ReviewService {
     Review save(String title, String body, String imdbId) throws ErrorException;
     Map<String, String> delete(ObjectId id) throws ErrorException;
     Review update(ObjectId id, String title, String body) throws ErrorException;
+    Review patch(ObjectId id, Map<String, String> fields) throws ErrorException;
 }
