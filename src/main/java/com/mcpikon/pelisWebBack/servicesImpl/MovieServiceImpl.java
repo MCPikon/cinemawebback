@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -40,5 +41,26 @@ public class MovieServiceImpl implements MovieService {
     public Optional<Movie> findByImdbId(String imdbId) throws ErrorException {
         log.info("GET movies /findByImdbId executed");
         return Optional.ofNullable(movieRepo.findByImdbId(imdbId).orElseThrow(() -> new ErrorException(Errors.NOT_FOUND, HttpStatus.NOT_FOUND)));
+    }
+
+    // TODO: Implementar métodos POST, DELETE, PUT y PATCH para Movies
+    @Override
+    public Movie save(Movie movie) throws ErrorException {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> delete(ObjectId id) throws ErrorException {
+        return null;
+    }
+
+    @Override
+    public Movie update(ObjectId id, Movie movie) throws ErrorException {
+        return null;
+    }
+
+    @Override
+    public Movie patch(ObjectId id, Map<String, String> fields) throws ErrorException {
+        return null;
     }
 }

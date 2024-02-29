@@ -107,6 +107,7 @@ public class ReviewServiceImpl implements ReviewService {
                 ReflectionUtils.setField(field, reviewToPatch, value);
             }
         });
+        reviewToPatch.setUpdatedAt(LocalDateTime.now());
         return reviewRepo.save(reviewToPatch);
     }
 }
