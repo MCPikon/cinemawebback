@@ -101,6 +101,9 @@ public class ReviewServiceImpl implements ReviewService {
         if (!reviewRepo.existsById(id)) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         Review reviewToPatch = reviewRepo.findById(id).orElseThrow();
         fields.forEach((key, value) -> {
+            if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("imdbId")) {
+                throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
+            }
             Field field = ReflectionUtils.findField(Review.class, key);
             if (field != null) {
                 field.setAccessible(true);

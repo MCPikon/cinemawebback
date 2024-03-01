@@ -14,6 +14,6 @@ public interface MovieService {
     Optional<Movie> findByImdbId(String imdbId) throws ErrorException;
     Movie save(Movie movie) throws ErrorException;
     Map<String, String> delete(ObjectId id) throws ErrorException;
-    Movie update(ObjectId id, Movie movie) throws ErrorException;
+    Movie update(Movie movie) throws ErrorException;
     Movie patch(ObjectId id, Map<String, String> fields) throws ErrorException;
 }
