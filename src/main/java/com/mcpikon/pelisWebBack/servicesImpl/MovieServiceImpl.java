@@ -5,6 +5,7 @@ import com.mcpikon.pelisWebBack.entities.Review;
 import com.mcpikon.pelisWebBack.models.ErrorException;
 import com.mcpikon.pelisWebBack.models.Errors;
 import com.mcpikon.pelisWebBack.repositories.MovieRepository;
+import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.services.MovieService;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +27,9 @@ import java.util.Optional;
 public class MovieServiceImpl implements MovieService {
     @Autowired
     private MovieRepository movieRepo;
+
+    @Autowired
+    private ReviewRepository reviewRepo;
 
     @Override
     public List<Movie> findAll() throws ErrorException {
@@ -62,6 +65,9 @@ public class MovieServiceImpl implements MovieService {
         log.info("DELETE movie /delete executed");
         if (!movieRepo.existsById(id)) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         Optional<Movie> movieToDelete = movieRepo.findById(id);
+        for (Review review : movieToDelete.orElseThrow().getReviewIds()) {
+            reviewRepo.delete(review);
+        }
         movieRepo.delete(movieToDelete.orElseThrow());
         return Map.of("message", String.format("Review with id: \"%s\" was successfully deleted", id));
     }
@@ -82,7 +88,7 @@ public class MovieServiceImpl implements MovieService {
             if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("imdbId")) {
                 throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
             }
-            Field field = ReflectionUtils.findField(Review.class, key);
+            Field field = ReflectionUtils.findField(Movie.class, key);
             if (field != null) {
                 field.setAccessible(true);
                 ReflectionUtils.setField(field, movieToPatch, value);
