@@ -51,7 +51,6 @@ public class MovieServiceImpl implements MovieService {
         return Optional.ofNullable(movieRepo.findByImdbId(imdbId).orElseThrow(() -> new ErrorException(Errors.NOT_FOUND, HttpStatus.NOT_FOUND)));
     }
 
-    // TODO: Implementar métodos POST, DELETE, PUT y PATCH para Movies
     @Override
     public Movie save(Movie movie) throws ErrorException {
         log.info("POST movies /save executed");
