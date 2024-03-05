@@ -1,0 +1,43 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_CLUSTER}
+      database: ${MONGO_DATABASE}
+  output:
+    ansi:
+      enabled: ALWAYS
+---
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: DEBUG
+---
+com:
+  mcpikon:
+    pelisWebBack:
+      dev-url: http://localhost:8080
+---
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api/v1/docs
+---
+management:
+  endpoints:
+    web:
+      base-path: /api/v1
+      path-mapping:
+        health: health
+  endpoint:
+    health:
+      show-details: ALWAYS
+      status:
+        http-mapping:
+          up: 207
+  health:
+    diskspace:
+      enabled: false

@@ -6,6 +6,7 @@ import com.mcpikon.pelisWebBack.models.ErrorException;
 import com.mcpikon.pelisWebBack.models.Errors;
 import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
+import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
 import com.mcpikon.pelisWebBack.services.MovieService;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -27,6 +28,9 @@ import java.util.Optional;
 public class MovieServiceImpl implements MovieService {
     @Autowired
     private MovieRepository movieRepo;
+
+    @Autowired
+    private SeriesRepository seriesRepo;
 
     @Autowired
     private ReviewRepository reviewRepo;
@@ -54,7 +58,8 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Movie save(Movie movie) throws ErrorException {
         log.info("POST movies /save executed");
-        if (movieRepo.existsByImdbId(movie.getImdbId())) throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
+        if (movieRepo.existsByImdbId(movie.getImdbId()) || seriesRepo.existsByImdbId(movie.getImdbId()))
+            throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
         movie.setReviewIds(new ArrayList<>());
         return movieRepo.insert(movie);
     }
@@ -62,13 +67,12 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Map<String, String> delete(ObjectId id) throws ErrorException {
         log.info("DELETE movie /delete executed");
-        if (!movieRepo.existsById(id)) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
-        Optional<Movie> movieToDelete = movieRepo.findById(id);
-        for (Review review : movieToDelete.orElseThrow().getReviewIds()) {
+        Movie movieToDelete = movieRepo.findById(id).orElseThrow(() -> new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST));
+        for (Review review : movieToDelete.getReviewIds()) {
             reviewRepo.delete(review);
         }
-        movieRepo.delete(movieToDelete.orElseThrow());
-        return Map.of("message", String.format("Review with id: \"%s\" was successfully deleted", id));
+        movieRepo.delete(movieToDelete);
+        return Map.of("message", String.format("Movie with id: '%s' was successfully deleted", id));
     }
 
     @Override
@@ -81,12 +85,10 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Movie patch(ObjectId id, Map<String, String> fields) throws ErrorException {
         log.info("PATCH movies /patch executed");
-        if (!movieRepo.existsById(id)) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
-        Movie movieToPatch = movieRepo.findById(id).orElseThrow();
+        Movie movieToPatch = movieRepo.findById(id).orElseThrow(() -> new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST));
         fields.forEach((key, value) -> {
-            if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("imdbId")) {
+            if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("imdbId"))
                 throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
-            }
             Field field = ReflectionUtils.findField(Movie.class, key);
             if (field != null) {
                 field.setAccessible(true);

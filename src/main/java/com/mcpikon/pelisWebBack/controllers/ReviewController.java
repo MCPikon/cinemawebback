@@ -5,6 +5,7 @@ import com.mcpikon.pelisWebBack.entities.Review;
 import com.mcpikon.pelisWebBack.models.ErrorException;
 import com.mcpikon.pelisWebBack.models.ResponseBase;
 import com.mcpikon.pelisWebBack.services.ReviewService;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,7 +46,7 @@ public class ReviewController {
         }
     }
 
-    @Operation(summary = "Fetch all reviews by ImdbId", description = "fetches all reviews and their data from movie with the ImdbId key passed")
+    @Operation(summary = "Fetch all reviews by ImdbId", description = "fetches all reviews and their data from movie or series with the ImdbId key passed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)), mediaType = "application/json") }),
@@ -56,7 +57,7 @@ public class ReviewController {
         try {
             return new ResponseEntity<>(reviewService.findAllByImdbId(imdbId), HttpStatus.OK);
         } catch (ErrorException e) {
-            log.error(String.format("Error in reviews /findAllByImdbId with imdbId: \"%s\" [%s]", imdbId, e.getIdStatus()));
+            log.error(String.format("Error in reviews /findAllByImdbId with imdbId: '%s' [%s]", imdbId, e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
@@ -64,7 +65,7 @@ public class ReviewController {
     @Operation(summary = "Fetch review by id", description = "fetch a review and their data filtering by id key")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(schema = @Schema(implementation = Movie.class), mediaType = "application/json") }),
+                    content = { @Content(schema = @Schema(implementation = Review.class), mediaType = "application/json") }),
             @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @GetMapping("/findById/{id}")
@@ -72,16 +73,16 @@ public class ReviewController {
         try {
             return new ResponseEntity<>(reviewService.findById(id), HttpStatus.OK);
         } catch (ErrorException e) {
-            log.error(String.format("Error in reviews /findById with id: \"%s\" [%s]", id, e.getIdStatus()));
+            log.error(String.format("Error in reviews /findById with id: '%s' [%s]", id, e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }
 
-    @Operation(summary = "Post review by movie ImdbId key", description = "Post a review and their data to the movie with the ImdbId key passed")
+    @Operation(summary = "Post review by ImdbId key", description = "Post a review and their data to the movie or series with the ImdbId key passed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Created",
                     content = { @Content(schema = @Schema(implementation = Review.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the ImdbId passed doesn't exists)")
+            @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed doesn't exists)")
     })
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody Map<String, String> payload) {
@@ -93,10 +94,10 @@ public class ReviewController {
         }
     }
 
-    @Operation(summary = "Delete review by id", description = "Delete a review and the id related in movies reviewIds array with the id key passed")
+    @Operation(summary = "Delete review by id", description = "Delete a review and the id related in movies or series reviewIds array with the id key passed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(schema = @Schema(implementation = Map.class), mediaType = "application/json") }),
+                    content = { @Content(schema = @Schema(implementation = Json.class), mediaType = "application/json") }),
             @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
     })
     @DeleteMapping("/delete/{id}")
@@ -136,7 +137,7 @@ public class ReviewController {
     @Operation(summary = "Patch review by id", description = "Patch a review with the fields and id key passed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(schema = @Schema(implementation = Map.class), mediaType = "application/json") }),
+                    content = { @Content(schema = @Schema(implementation = Review.class), mediaType = "application/json") }),
             @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
     })
     @PatchMapping("/patch/{id}")
@@ -144,7 +145,7 @@ public class ReviewController {
         try {
             return new ResponseEntity<>(reviewService.patch(id, fields), HttpStatus.OK);
         } catch (ErrorException e) {
-            log.error(String.format("Error in reviews /patch with id: \"%s\" [%s]", id, e.getIdStatus()));
+            log.error(String.format("Error in reviews /patch with id: '%s' [%s]", id, e.getIdStatus()));
             return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
         }
     }

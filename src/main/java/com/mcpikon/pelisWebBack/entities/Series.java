@@ -23,27 +23,28 @@ public class Series {
     private String imdbId;
     private String title;
     private String overview;
-    private int numberOfEpisodes;
+    private int numberOfSeasons;
     private String creator;
     private String releaseDate;
     private String trailerLink;
     private List<String> genres;
-    private List<Episode> episodeList;
+    private List<Season> seasonList;
     private String poster;
     private String backdrop;
     @DocumentReference
-    private List<Review> reviewsIds;
+    private List<Review> reviewIds;
 
-    public Series(String imdbId, String title, String overview, int numberOfEpisodes, String creator, String releaseDate, String trailerLink, List<String> genres, List<Episode> episodeList, String poster, String backdrop) {
+    public Series(String imdbId, String title, String overview, int numberOfEpisodes, String creator, String releaseDate,
+                  String trailerLink, List<String> genres, List<Season> seasonList, String poster, String backdrop) {
         this.imdbId = imdbId;
         this.title = title;
         this.overview = overview;
-        this.numberOfEpisodes = numberOfEpisodes;
+        this.numberOfSeasons = numberOfEpisodes;
         this.creator = creator;
         this.releaseDate = releaseDate;
         this.trailerLink = trailerLink;
         this.genres = genres;
-        this.episodeList = episodeList;
+        this.seasonList = seasonList;
         this.poster = poster;
         this.backdrop = backdrop;
     }
