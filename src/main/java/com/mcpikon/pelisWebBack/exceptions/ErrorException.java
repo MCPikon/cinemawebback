@@ -1,4 +1,4 @@
-package com.mcpikon.pelisWebBack.models;
+package com.mcpikon.pelisWebBack.exceptions;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

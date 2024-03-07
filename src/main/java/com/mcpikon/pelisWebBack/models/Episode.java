@@ -1,4 +1,4 @@
-package com.mcpikon.pelisWebBack.entities;
+package com.mcpikon.pelisWebBack.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

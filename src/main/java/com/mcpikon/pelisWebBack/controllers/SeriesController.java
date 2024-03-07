@@ -1,8 +1,11 @@
 package com.mcpikon.pelisWebBack.controllers;
 
-import com.mcpikon.pelisWebBack.entities.Series;
-import com.mcpikon.pelisWebBack.models.ErrorException;
-import com.mcpikon.pelisWebBack.models.ResponseBase;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.models.Series;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
+import com.mcpikon.pelisWebBack.exceptions.ResponseBase;
 import com.mcpikon.pelisWebBack.services.SeriesService;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Tag(name = "Series", description = "Series management API endpoints.")
 @Slf4j
@@ -36,13 +41,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "204", description = "Empty List")
     })
     @GetMapping("/findAll")
-    public ResponseEntity<?> findAll() {
-        try {
-            return new ResponseEntity<>(seriesService.findAll(), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /findAll [%s]", e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<List<Series>> findAll() {
+        return new ResponseEntity<>(seriesService.findAll(), HttpStatus.OK);
     }
 
     @Operation(summary = "Fetch series by id", description = "fetch a series and their data filtering by id key")
@@ -52,13 +52,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @GetMapping("/findById/{id}")
-    public ResponseEntity<?> findById(@PathVariable ObjectId id) {
-        try {
-            return new ResponseEntity<>(seriesService.findById(id), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /findById with id: '%s' [%s]", id, e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Optional<Series>> findById(@PathVariable ObjectId id) {
+        return new ResponseEntity<>(seriesService.findById(id), HttpStatus.OK);
     }
 
     @Operation(summary = "Fetch series by ImdbId", description = "fetch a series and their data filtering by ImdbId key")
@@ -68,13 +63,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @GetMapping("/findByImdbId/{imdbId}")
-    public ResponseEntity<?> findByImdbId(@PathVariable String imdbId) {
-        try {
-            return new ResponseEntity<>(seriesService.findByImdbId(imdbId), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /findById with imdbId: '%s' [%s]", imdbId, e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Optional<Series>> findByImdbId(@PathVariable String imdbId) {
+        return new ResponseEntity<>(seriesService.findByImdbId(imdbId), HttpStatus.OK);
     }
 
     @Operation(summary = "Post new series", description = "Post new series into the database")
@@ -84,13 +74,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed already exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<?> save(@RequestBody Series series) {
-        try {
-            return new ResponseEntity<>(seriesService.save(series), HttpStatus.CREATED);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /save [%s]", e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Series> save(@RequestBody Series series) {
+        return new ResponseEntity<>(seriesService.save(series), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Delete series by id", description = "Delete series with the id key passed")
@@ -100,13 +85,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
     })
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable ObjectId id) {
-        try {
-            return new ResponseEntity<>(seriesService.delete(id), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /delete [%s]", e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Map<String, String>> delete(@PathVariable ObjectId id) {
+        return new ResponseEntity<>(seriesService.delete(id), HttpStatus.OK);
     }
 
     @Operation(summary = "Update series by id", description = "Update a series with the id key passed")
@@ -116,13 +96,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
     })
     @PutMapping("/update")
-    public ResponseEntity<?> update(@RequestBody Series series) {
-        try {
-            return new ResponseEntity<>(seriesService.update(series), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /update [%s]", e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Series> update(@RequestBody Series series) {
+        return new ResponseEntity<>(seriesService.update(series), HttpStatus.OK);
     }
 
     @Operation(summary = "Patch series by id", description = "Patch a series with the fields and id key passed")
@@ -132,12 +107,7 @@ public class SeriesController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
     })
     @PatchMapping("/patch/{id}")
-    public ResponseEntity<?> patch(@PathVariable ObjectId id, @RequestBody Map<String, String> fields) {
-        try {
-            return new ResponseEntity<>(seriesService.patch(id, fields), HttpStatus.OK);
-        } catch (ErrorException e) {
-            log.error(String.format("Error in series /patch with id: '%s' [%s]", id, e.getIdStatus()));
-            return new ResponseEntity<>(new ResponseBase(e), e.getIdStatus());
-        }
+    public ResponseEntity<Series> patch(@PathVariable ObjectId id, @RequestBody JsonPatch jsonPatch) throws JsonPatchException, JsonProcessingException {
+        return new ResponseEntity<>(seriesService.patch(id, jsonPatch), HttpStatus.OK);
     }
 }

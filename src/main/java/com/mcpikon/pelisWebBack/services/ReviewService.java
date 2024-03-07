@@ -1,7 +1,10 @@
 package com.mcpikon.pelisWebBack.services;
 
-import com.mcpikon.pelisWebBack.entities.Review;
-import com.mcpikon.pelisWebBack.models.ErrorException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.models.Review;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -15,5 +18,5 @@ public interface ReviewService {
     Review save(String title, String body, String imdbId) throws ErrorException;
     Map<String, String> delete(ObjectId id) throws ErrorException;
     Review update(ObjectId id, String title, String body) throws ErrorException;
-    Review patch(ObjectId id, Map<String, String> fields) throws ErrorException;
+    Review patch(ObjectId id, JsonPatch jsonPatch) throws ErrorException, JsonPatchException, JsonProcessingException;
 }

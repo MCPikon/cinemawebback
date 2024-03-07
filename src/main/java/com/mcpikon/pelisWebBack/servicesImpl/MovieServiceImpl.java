@@ -1,9 +1,14 @@
 package com.mcpikon.pelisWebBack.servicesImpl;
 
-import com.mcpikon.pelisWebBack.entities.Movie;
-import com.mcpikon.pelisWebBack.entities.Review;
-import com.mcpikon.pelisWebBack.models.ErrorException;
-import com.mcpikon.pelisWebBack.models.Errors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.models.Movie;
+import com.mcpikon.pelisWebBack.models.Review;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
+import com.mcpikon.pelisWebBack.exceptions.Errors;
 import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
@@ -35,31 +40,45 @@ public class MovieServiceImpl implements MovieService {
     @Autowired
     private ReviewRepository reviewRepo;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     public List<Movie> findAll() throws ErrorException {
         log.info("GET movies /findAll executed");
         List<Movie> movies = movieRepo.findAll();
-        if (movies.isEmpty()) throw new ErrorException(Errors.EMPTY, HttpStatus.NO_CONTENT);
+        if (movies.isEmpty()) {
+            log.error(String.format("Error in movies /findAll [%s]", HttpStatus.NO_CONTENT));
+            throw new ErrorException(Errors.EMPTY, HttpStatus.NO_CONTENT);
+        }
         return movies;
     }
 
     @Override
     public Optional<Movie> findById(ObjectId id) throws ErrorException {
         log.info("GET movies /findById executed");
-        return Optional.ofNullable(movieRepo.findById(id).orElseThrow(() -> new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND)));
+        return Optional.ofNullable(movieRepo.findById(id).orElseThrow(() -> {
+            log.error(String.format("Error in movies /findById with id: '%s' [%s]", id, HttpStatus.NOT_FOUND));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND);
+        }));
     }
 
     @Override
     public Optional<Movie> findByImdbId(String imdbId) throws ErrorException {
         log.info("GET movies /findByImdbId executed");
-        return Optional.ofNullable(movieRepo.findByImdbId(imdbId).orElseThrow(() -> new ErrorException(Errors.NOT_FOUND, HttpStatus.NOT_FOUND)));
+        return Optional.ofNullable(movieRepo.findByImdbId(imdbId).orElseThrow(() -> {
+            log.error(String.format("Error in movies /findByImdbId with imdbId: '%s' [%s]", imdbId, HttpStatus.NOT_FOUND));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND);
+        }));
     }
 
     @Override
     public Movie save(Movie movie) throws ErrorException {
         log.info("POST movies /save executed");
-        if (movieRepo.existsByImdbId(movie.getImdbId()) || seriesRepo.existsByImdbId(movie.getImdbId()))
+        if (movieRepo.existsByImdbId(movie.getImdbId()) || seriesRepo.existsByImdbId(movie.getImdbId())) {
+            log.error(String.format("Error in movies /save with imdbId: '%s' [%s]", movie.getImdbId(), HttpStatus.BAD_REQUEST));
             throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
+        }
         movie.setReviewIds(new ArrayList<>());
         return movieRepo.insert(movie);
     }
@@ -67,7 +86,10 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Map<String, String> delete(ObjectId id) throws ErrorException {
         log.info("DELETE movie /delete executed");
-        Movie movieToDelete = movieRepo.findById(id).orElseThrow(() -> new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST));
+        Movie movieToDelete = movieRepo.findById(id).orElseThrow(() -> {
+            log.error(String.format("Error in movies /delete with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        });
         for (Review review : movieToDelete.getReviewIds()) {
             reviewRepo.delete(review);
         }
@@ -78,23 +100,21 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Movie update(Movie movie) throws ErrorException {
         log.info("PUT movie /update executed");
-        if (!movieRepo.existsById(movie.getId())) throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        if (!movieRepo.existsById(movie.getId())) {
+            log.error(String.format("Error in movies /update with id: '%s' [%s]", movie.getId(), HttpStatus.BAD_REQUEST));
+            throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        }
         return movieRepo.save(movie);
     }
 
     @Override
-    public Movie patch(ObjectId id, Map<String, String> fields) throws ErrorException {
+    public Movie patch(ObjectId id, JsonPatch jsonPatch) throws ErrorException, JsonPatchException, JsonProcessingException {
         log.info("PATCH movies /patch executed");
-        Movie movieToPatch = movieRepo.findById(id).orElseThrow(() -> new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST));
-        fields.forEach((key, value) -> {
-            if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("imdbId"))
-                throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
-            Field field = ReflectionUtils.findField(Movie.class, key);
-            if (field != null) {
-                field.setAccessible(true);
-                ReflectionUtils.setField(field, movieToPatch, value);
-            }
+        Movie movieToPatch = movieRepo.findById(id).orElseThrow(() -> {
+            log.error(String.format("Error in movies /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         });
-        return movieRepo.save(movieToPatch);
+        JsonNode patched = jsonPatch.apply(objectMapper.convertValue(movieToPatch, JsonNode.class));
+        return movieRepo.save(objectMapper.treeToValue(patched, Movie.class));
     }
 }

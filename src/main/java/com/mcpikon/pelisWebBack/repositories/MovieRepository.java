@@ -1,6 +1,6 @@
 package com.mcpikon.pelisWebBack.repositories;
 
-import com.mcpikon.pelisWebBack.entities.Movie;
+import com.mcpikon.pelisWebBack.models.Movie;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

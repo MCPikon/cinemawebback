@@ -1,7 +1,10 @@
 package com.mcpikon.pelisWebBack.services;
 
-import com.mcpikon.pelisWebBack.entities.Movie;
-import com.mcpikon.pelisWebBack.models.ErrorException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.models.Movie;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -15,5 +18,5 @@ public interface MovieService {
     Movie save(Movie movie) throws ErrorException;
     Map<String, String> delete(ObjectId id) throws ErrorException;
     Movie update(Movie movie) throws ErrorException;
-    Movie patch(ObjectId id, Map<String, String> fields) throws ErrorException;
+    Movie patch(ObjectId id, JsonPatch jsonPatch) throws ErrorException, JsonPatchException, JsonProcessingException;
 }

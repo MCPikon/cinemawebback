@@ -1,4 +1,4 @@
-package com.mcpikon.pelisWebBack.models;
+package com.mcpikon.pelisWebBack.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,9 @@ public enum Errors {
     NOT_FOUND(2L, "Entity not found"),
     NOT_EXISTS(3L, "Entity doesn't exists"),
     ALREADY_EXISTS(4L, "Entity already exists"),
-    ID_CANNOT_CHANGE(5L, "ID key cannot be changed");
+    ID_CANNOT_CHANGE(5L, "ID key cannot be changed"),
+    CANNOT_PARSE_OBJ_ID(6L,"Error parsing String id to ObjectId (id not valid)"),
+    CANNOT_PARSE_JSON(7L, "Cannot parse JSON Patch, change JSON object");
 
     private final long id;
     private final String message;

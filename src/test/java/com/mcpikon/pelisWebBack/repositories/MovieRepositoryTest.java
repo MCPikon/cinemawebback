@@ -1,6 +1,6 @@
 package com.mcpikon.pelisWebBack.repositories;
 
-import com.mcpikon.pelisWebBack.entities.Movie;
+import com.mcpikon.pelisWebBack.models.Movie;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
