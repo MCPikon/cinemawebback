@@ -3,6 +3,7 @@ package com.mcpikon.pelisWebBack.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.dtos.MovieDTO;
 import com.mcpikon.pelisWebBack.models.Movie;
 import com.mcpikon.pelisWebBack.services.MovieService;
 import io.swagger.v3.core.util.Json;
@@ -70,8 +71,8 @@ public class MovieController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A movie or series with the ImdbId passed already exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<Movie> save(@RequestBody Movie movie) {
-        return new ResponseEntity<>(movieService.save(movie), HttpStatus.CREATED);
+    public ResponseEntity<Movie> save(@RequestBody MovieDTO movieDTO) {
+        return new ResponseEntity<>(movieService.save(movieDTO), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Delete movie by id", description = "Delete movie with the id key passed")
@@ -91,9 +92,9 @@ public class MovieController {
                     content = { @Content(schema = @Schema(implementation = Movie.class), mediaType = "application/json") }),
             @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the id passed doesn't exists)")
     })
-    @PutMapping("/update")
-    public ResponseEntity<Movie> update(@RequestBody Movie movie) {
-        return new ResponseEntity<>(movieService.update(movie), HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Movie> update(@PathVariable ObjectId id, @RequestBody MovieDTO movieDTO) {
+        return new ResponseEntity<>(movieService.update(id, movieDTO), HttpStatus.OK);
     }
 
     @Operation(summary = "Patch movie by id", description = "Patch a movie with the fields and id key passed")

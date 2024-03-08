@@ -1,10 +1,11 @@
-package com.mcpikon.pelisWebBack.servicesImpl;
+package com.mcpikon.pelisWebBack.services.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.dtos.MovieDTO;
 import com.mcpikon.pelisWebBack.models.Movie;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.exceptions.ErrorException;
@@ -13,16 +14,14 @@ import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
 import com.mcpikon.pelisWebBack.services.MovieService;
+import com.mcpikon.pelisWebBack.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,14 +72,14 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Movie save(Movie movie) throws ErrorException {
+    public Movie save(MovieDTO movieDTO) throws ErrorException {
         log.info("POST movies /save executed");
-        if (movieRepo.existsByImdbId(movie.getImdbId()) || seriesRepo.existsByImdbId(movie.getImdbId())) {
-            log.error(String.format("Error in movies /save with imdbId: '%s' [%s]", movie.getImdbId(), HttpStatus.BAD_REQUEST));
+        if (movieRepo.existsByImdbId(movieDTO.imdbId()) || seriesRepo.existsByImdbId(movieDTO.imdbId())) {
+            log.error(String.format("Error in movies /save with imdbId: '%s' [%s]", movieDTO.imdbId(), HttpStatus.BAD_REQUEST));
             throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
         }
-        movie.setReviewIds(new ArrayList<>());
-        return movieRepo.insert(movie);
+        Movie movieToSave = DTOMapper.dtoToMovie(movieDTO);
+        return movieRepo.insert(movieToSave);
     }
 
     @Override
@@ -98,13 +97,19 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Movie update(Movie movie) throws ErrorException {
+    public Movie update(ObjectId id, MovieDTO movieDTO) throws ErrorException {
         log.info("PUT movie /update executed");
-        if (!movieRepo.existsById(movie.getId())) {
-            log.error(String.format("Error in movies /update with id: '%s' [%s]", movie.getId(), HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        Movie movieToFind = movieRepo.findById(id).orElseThrow(() -> {
+            log.error(String.format("Error in movies /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        });
+        if ((movieRepo.existsByImdbId(movieDTO.imdbId()) || seriesRepo.existsByImdbId(movieDTO.imdbId()))
+                && !movieToFind.getImdbId().equalsIgnoreCase(movieDTO.imdbId())) {
+            log.error(String.format("Error in movies /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            throw new ErrorException(Errors.IMDB_ID_ALREADY_IN_USE, HttpStatus.BAD_REQUEST);
         }
-        return movieRepo.save(movie);
+        Movie movieToUpdate = DTOMapper.dtoToMovieUpdate(movieToFind, movieDTO);
+        return movieRepo.save(movieToUpdate);
     }
 
     @Override

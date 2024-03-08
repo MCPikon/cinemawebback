@@ -75,6 +75,7 @@ public class SeriesController {
     })
     @PostMapping("/save")
     public ResponseEntity<Series> save(@RequestBody Series series) {
+        // TODO: cambiar para añadir el modelo DTO como en Movies
         return new ResponseEntity<>(seriesService.save(series), HttpStatus.CREATED);
     }
 
@@ -97,6 +98,7 @@ public class SeriesController {
     })
     @PutMapping("/update")
     public ResponseEntity<Series> update(@RequestBody Series series) {
+        // TODO: cambiar para añadir el modelo DTO como en Movies
         return new ResponseEntity<>(seriesService.update(series), HttpStatus.OK);
     }
 

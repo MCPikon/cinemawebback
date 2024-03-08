@@ -1,4 +1,4 @@
-package com.mcpikon.pelisWebBack.servicesImpl;
+package com.mcpikon.pelisWebBack.services.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,6 +72,7 @@ public class SeriesServiceImpl implements SeriesService {
 
     @Override
     public Series save(Series series) throws ErrorException {
+        // TODO: cambiar para añadir el modelo DTO como en Movies
         log.info("POST series /save executed");
         if (seriesRepo.existsByImdbId(series.getImdbId()) || moviesRepo.existsByImdbId(series.getImdbId())) {
             log.error(String.format("Error in series /save with imdbId: '%s' [%s]", series.getImdbId(), HttpStatus.BAD_REQUEST));
@@ -97,6 +98,7 @@ public class SeriesServiceImpl implements SeriesService {
 
     @Override
     public Series update(Series series) throws ErrorException {
+        // TODO: cambiar para añadir el modelo DTO como en Movies
         log.info("PUT series /update executed");
         if (!seriesRepo.existsById(series.getId())) {
             log.error(String.format("Error in series /update with id: '%s' [%s]", series.getId(), HttpStatus.BAD_REQUEST));
