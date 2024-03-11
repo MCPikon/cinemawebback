@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.dtos.SeriesDTO;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.models.Series;
 import com.mcpikon.pelisWebBack.exceptions.ErrorException;
@@ -13,6 +14,7 @@ import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
 import com.mcpikon.pelisWebBack.services.SeriesService;
+import com.mcpikon.pelisWebBack.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class SeriesServiceImpl implements SeriesService {
     private SeriesRepository seriesRepo;
 
     @Autowired
-    private MovieRepository moviesRepo;
+    private MovieRepository movieRepo;
 
     @Autowired
     private ReviewRepository reviewRepo;
@@ -71,15 +72,14 @@ public class SeriesServiceImpl implements SeriesService {
     }
 
     @Override
-    public Series save(Series series) throws ErrorException {
-        // TODO: cambiar para añadir el modelo DTO como en Movies
+    public Series save(SeriesDTO seriesDTO) throws ErrorException {
         log.info("POST series /save executed");
-        if (seriesRepo.existsByImdbId(series.getImdbId()) || moviesRepo.existsByImdbId(series.getImdbId())) {
-            log.error(String.format("Error in series /save with imdbId: '%s' [%s]", series.getImdbId(), HttpStatus.BAD_REQUEST));
+        if (seriesRepo.existsByImdbId(seriesDTO.imdbId()) || movieRepo.existsByImdbId(seriesDTO.imdbId())) {
+            log.error(String.format("Error in series /save with imdbId: '%s' [%s]", seriesDTO.imdbId(), HttpStatus.BAD_REQUEST));
             throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
         }
-        series.setReviewIds(new ArrayList<>());
-        return seriesRepo.insert(series);
+        Series seriesToSave = DTOMapper.dtoToSeries(seriesDTO);
+        return seriesRepo.insert(seriesToSave);
     }
 
     @Override
@@ -97,14 +97,19 @@ public class SeriesServiceImpl implements SeriesService {
     }
 
     @Override
-    public Series update(Series series) throws ErrorException {
-        // TODO: cambiar para añadir el modelo DTO como en Movies
+    public Series update(ObjectId id, SeriesDTO seriesDTO) throws ErrorException {
         log.info("PUT series /update executed");
-        if (!seriesRepo.existsById(series.getId())) {
-            log.error(String.format("Error in series /update with id: '%s' [%s]", series.getId(), HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        Series seriesToFind = seriesRepo.findById(id).orElseThrow(() -> {
+            log.error(String.format("Error in series /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+        });
+        if ((movieRepo.existsByImdbId(seriesDTO.imdbId()) || seriesRepo.existsByImdbId(seriesDTO.imdbId()))
+                && !seriesToFind.getImdbId().equalsIgnoreCase(seriesDTO.imdbId())) {
+            log.error(String.format("Error in series /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            throw new ErrorException(Errors.IMDB_ID_ALREADY_IN_USE, HttpStatus.BAD_REQUEST);
         }
-        return seriesRepo.save(series);
+        Series seriesToUpdate = DTOMapper.dtoToSeriesUpdate(seriesToFind, seriesDTO);
+        return seriesRepo.save(seriesToUpdate);
     }
 
     @Override

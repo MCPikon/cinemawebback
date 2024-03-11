@@ -1,10 +1,14 @@
 package com.mcpikon.pelisWebBack.utils;
 
 import com.mcpikon.pelisWebBack.dtos.MovieDTO;
+import com.mcpikon.pelisWebBack.dtos.ReviewDTO;
+import com.mcpikon.pelisWebBack.dtos.ReviewSaveDTO;
 import com.mcpikon.pelisWebBack.dtos.SeriesDTO;
 import com.mcpikon.pelisWebBack.models.Movie;
+import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.models.Series;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class DTOMapper {
@@ -75,5 +79,25 @@ public class DTOMapper {
                 .poster(seriesDTO.poster())
                 .backdrop(seriesDTO.backdrop())
                 .reviewIds(series.getReviewIds()).build();
+    }
+
+    // Review DTOs Converters
+    public static Review dtoToReview(ReviewSaveDTO reviewSaveDTO) {
+        return Review.builder()
+                .title(reviewSaveDTO.title())
+                .body(reviewSaveDTO.body())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public static Review dtoToReviewUpdate(Review review, ReviewDTO reviewDTO) {
+        return Review.builder()
+                .id(review.getId())
+                .title(reviewDTO.title())
+                .body(reviewDTO.body())
+                .createdAt(review.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

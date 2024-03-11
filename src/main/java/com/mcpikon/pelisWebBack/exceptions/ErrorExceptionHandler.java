@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class ErrorExceptionHandler {
@@ -24,6 +25,12 @@ public class ErrorExceptionHandler {
     @ExceptionHandler(JsonProcessingException.class)
     public ResponseEntity<ResponseBase> handleJsonProcessingException(JsonProcessingException ex) {
         ErrorException e = new ErrorException(Errors.CANNOT_PARSE_JSON, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ResponseBase(e), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ResponseBase> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        ErrorException e = new ErrorException(Errors.CANNOT_PARSE_OBJ_ID, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(new ResponseBase(e), HttpStatus.BAD_REQUEST);
     }
 }

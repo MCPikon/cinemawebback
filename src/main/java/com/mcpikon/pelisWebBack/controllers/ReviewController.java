@@ -3,8 +3,8 @@ package com.mcpikon.pelisWebBack.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
-import com.mcpikon.pelisWebBack.exceptions.ErrorException;
-import com.mcpikon.pelisWebBack.exceptions.Errors;
+import com.mcpikon.pelisWebBack.dtos.ReviewDTO;
+import com.mcpikon.pelisWebBack.dtos.ReviewSaveDTO;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.services.ReviewService;
 import io.swagger.v3.core.util.Json;
@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Slf4j
 @Tag(name = "Reviews", description = "Reviews management API endpoints.")
 @RestController
 @RequestMapping("/api/v1/reviews")
@@ -74,8 +72,8 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed doesn't exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<Review> save(@RequestBody Map<String, String> payload) {
-        return new ResponseEntity<>(reviewService.save(payload.get("title"), payload.get("body"), payload.get("imdbId")), HttpStatus.CREATED);
+    public ResponseEntity<Review> save(@RequestBody ReviewSaveDTO reviewSaveDTO) {
+        return new ResponseEntity<>(reviewService.save(reviewSaveDTO), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Delete review by id", description = "Delete a review and the id related in movies or series reviewIds array with the id key passed")
@@ -96,16 +94,9 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The api can't parse the String id to ObjectId)"),
             @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
     })
-    @PutMapping("/update")
-    public ResponseEntity<Review> update(@RequestBody Map<String, String> payload) {
-        ObjectId id;
-        try {
-            id = new ObjectId(payload.get("id"));
-        } catch (Exception e) {
-            log.error("Error in reviews /update parsing String id to ObjectId");
-            throw new ErrorException(Errors.CANNOT_PARSE_OBJ_ID, HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(reviewService.update(id, payload.get("title"), payload.get("body")), HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Review> update(@PathVariable ObjectId id, @RequestBody ReviewDTO reviewDTO) {
+        return new ResponseEntity<>(reviewService.update(id, reviewDTO), HttpStatus.OK);
     }
 
     @Operation(summary = "Patch review by id", description = "Patch a review with the fields and id key passed")

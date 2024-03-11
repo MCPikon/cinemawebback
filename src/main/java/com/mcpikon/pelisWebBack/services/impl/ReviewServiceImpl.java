@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.dtos.ReviewDTO;
+import com.mcpikon.pelisWebBack.dtos.ReviewSaveDTO;
 import com.mcpikon.pelisWebBack.models.Movie;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.models.Series;
@@ -14,6 +16,7 @@ import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
 import com.mcpikon.pelisWebBack.services.ReviewService;
+import com.mcpikon.pelisWebBack.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,24 +91,27 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Review save(String title, String body, String imdbId) {
+    public Review save(ReviewSaveDTO reviewSaveDTO) {
         log.info("POST reviews /save executed");
         final String imdbIdKey = "imdbId";
         final String reviewIdsKey = "reviewIds";
         Review review;
+        Review reviewToSave;
 
-        if (movieRepo.existsByImdbId(imdbId)) {
-            review = reviewRepo.insert(new Review(title, body, LocalDateTime.now(), LocalDateTime.now()));
+        if (movieRepo.existsByImdbId(reviewSaveDTO.imdbId())) {
+            reviewToSave = DTOMapper.dtoToReview(reviewSaveDTO);
+            review = reviewRepo.insert(reviewToSave);
             mongoTemplate.update(Movie.class)
-                    .matching(Criteria.where(imdbIdKey).is(imdbId))
+                    .matching(Criteria.where(imdbIdKey).is(reviewSaveDTO.imdbId()))
                     .apply(new Update().push(reviewIdsKey).value(review)).first();
-        } else if (seriesRepo.existsByImdbId(imdbId)) {
-            review = reviewRepo.insert(new Review(title, body, LocalDateTime.now(), LocalDateTime.now()));
+        } else if (seriesRepo.existsByImdbId(reviewSaveDTO.imdbId())) {
+            reviewToSave = DTOMapper.dtoToReview(reviewSaveDTO);
+            review = reviewRepo.insert(reviewToSave);
             mongoTemplate.update(Series.class)
-                    .matching(Criteria.where(imdbIdKey).is(imdbId))
+                    .matching(Criteria.where(imdbIdKey).is(reviewSaveDTO.imdbId()))
                     .apply(new Update().push(reviewIdsKey).value(review)).first();
         } else {
-            log.error(String.format("Error in reviews /save with imdbId: '%s' [%s]", imdbId, HttpStatus.BAD_REQUEST));
+            log.error(String.format("Error in reviews /save with imdbId: '%s' [%s]", reviewSaveDTO.imdbId(), HttpStatus.BAD_REQUEST));
             throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         }
 
@@ -124,15 +130,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Review update(ObjectId id, String title, String body) throws ErrorException {
+    public Review update(ObjectId id, ReviewDTO reviewDTO) throws ErrorException {
         log.info("PUT reviews /update executed");
-        Review reviewToUpdate = reviewRepo.findById(id).orElseThrow(() -> {
+        Review reviewToFind = reviewRepo.findById(id).orElseThrow(() -> {
             log.error(String.format("Error in reviews /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
             return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         });
-        reviewToUpdate.setUpdatedAt(LocalDateTime.now());
-        reviewToUpdate.setTitle(title);
-        reviewToUpdate.setBody(body);
+        Review reviewToUpdate = DTOMapper.dtoToReviewUpdate(reviewToFind, reviewDTO);
         return reviewRepo.save(reviewToUpdate);
     }
 
@@ -143,8 +147,13 @@ public class ReviewServiceImpl implements ReviewService {
             log.error(String.format("Error in reviews /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
             return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
         });
-        JsonNode patched = jsonPatch.apply(objectMapper.convertValue(reviewToPatch, JsonNode.class));
+        var jsonPatchList = objectMapper.convertValue(jsonPatch, JsonNode.class);
+        if (jsonPatchList.get(0).get("path").asText().equalsIgnoreCase("/id")) {
+            log.error(String.format("Error in reviews /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
+            throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
+        }
         reviewToPatch.setUpdatedAt(LocalDateTime.now());
+        JsonNode patched = jsonPatch.apply(objectMapper.convertValue(reviewToPatch, JsonNode.class));
         return reviewRepo.save(objectMapper.treeToValue(patched, Review.class));
     }
 }

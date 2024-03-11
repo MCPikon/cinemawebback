@@ -35,6 +35,7 @@ Este proyecto realiza un CRUD (Crear, Modificar y Eliminar) de Películas, Serie
     * Lombok
     * spring-dotenv (4.0.0)
     * SpringDoc OpenAPI Starter WebMVC UI (2.3.0)
+    * java-json-tools _(json-patch)_ (1.13)
 
 ## 📄 Licencia
 

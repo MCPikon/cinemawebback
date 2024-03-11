@@ -3,9 +3,8 @@ package com.mcpikon.pelisWebBack.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.mcpikon.pelisWebBack.dtos.SeriesDTO;
 import com.mcpikon.pelisWebBack.models.Series;
-import com.mcpikon.pelisWebBack.exceptions.ErrorException;
-import com.mcpikon.pelisWebBack.exceptions.ResponseBase;
 import com.mcpikon.pelisWebBack.services.SeriesService;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 
 @Tag(name = "Series", description = "Series management API endpoints.")
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/series")
 public class SeriesController {
@@ -74,9 +71,8 @@ public class SeriesController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed already exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<Series> save(@RequestBody Series series) {
-        // TODO: cambiar para añadir el modelo DTO como en Movies
-        return new ResponseEntity<>(seriesService.save(series), HttpStatus.CREATED);
+    public ResponseEntity<Series> save(@RequestBody SeriesDTO seriesDTO) {
+        return new ResponseEntity<>(seriesService.save(seriesDTO), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Delete series by id", description = "Delete series with the id key passed")
@@ -96,10 +92,9 @@ public class SeriesController {
                     content = { @Content(schema = @Schema(implementation = Series.class), mediaType = "application/json") }),
             @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
     })
-    @PutMapping("/update")
-    public ResponseEntity<Series> update(@RequestBody Series series) {
-        // TODO: cambiar para añadir el modelo DTO como en Movies
-        return new ResponseEntity<>(seriesService.update(series), HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Series> update(@PathVariable ObjectId id, @RequestBody SeriesDTO seriesDTO) {
+        return new ResponseEntity<>(seriesService.update(id, seriesDTO), HttpStatus.OK);
     }
 
     @Operation(summary = "Patch series by id", description = "Patch a series with the fields and id key passed")
