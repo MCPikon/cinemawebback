@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mcpikon</groupId>
-	<artifactId>pelisWebBack</artifactId>
+	<artifactId>cinemawebback</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>pelisWebBack</name>
-	<description>An API related to movies</description>
+	<name>cinemaWebBack</name>
+	<description>An API related to movies, series and its reviews</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
