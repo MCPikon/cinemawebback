@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.MovieDTO;
+import com.mcpikon.cinemawebback.dtos.MovieResponseDTO;
 import com.mcpikon.cinemawebback.models.Movie;
 import com.mcpikon.cinemawebback.services.MovieService;
 import io.swagger.v3.core.util.Json;
@@ -35,11 +36,11 @@ public class MovieController {
     @Operation(summary = "Fetch all movies", description = "fetches all movies and their data from data source")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = Movie.class)), mediaType = "application/json") }),
+                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = MovieResponseDTO.class)), mediaType = "application/json") }),
             @ApiResponse(responseCode = "204", description = "Empty List")
     })
     @GetMapping("/findAll")
-    public ResponseEntity<List<Movie>> findAll() {
+    public ResponseEntity<List<MovieResponseDTO>> findAll() {
         return new ResponseEntity<>(movieService.findAll(), HttpStatus.OK);
     }
 

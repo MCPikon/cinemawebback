@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.MovieDTO;
+import com.mcpikon.cinemawebback.dtos.MovieResponseDTO;
 import com.mcpikon.cinemawebback.exceptions.ErrorException;
 import com.mcpikon.cinemawebback.models.Movie;
 import com.mcpikon.cinemawebback.models.Review;
@@ -43,14 +44,14 @@ public class MovieServiceImpl implements MovieService {
     private ObjectMapper objectMapper;
 
     @Override
-    public List<Movie> findAll() throws ErrorException {
+    public List<MovieResponseDTO> findAll() throws ErrorException {
         log.info("GET movies /findAll executed");
         List<Movie> movies = movieRepo.findAll();
         if (movies.isEmpty()) {
             log.error(String.format("Error in movies /findAll [%s]", EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
-        return movies;
+        return movies.stream().map(DTOMapper::movieToResponseDTO).toList();
     }
 
     @Override

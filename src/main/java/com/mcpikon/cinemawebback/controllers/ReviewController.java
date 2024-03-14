@@ -44,7 +44,7 @@ public class ReviewController {
         return new ResponseEntity<>(reviewService.findAll(), HttpStatus.OK);
     }
 
-    @Operation(summary = "Fetch all reviews by ImdbId", description = "fetches all reviews and their data from movie or series with the ImdbId key passed")
+    @Operation(summary = "Fetch all reviews by movie or series ImdbId", description = "fetches all reviews and their data from movie or series with the ImdbId key passed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = {@Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)), mediaType = "application/json")}),

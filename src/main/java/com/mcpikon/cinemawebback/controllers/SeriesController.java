@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.SeriesDTO;
+import com.mcpikon.cinemawebback.dtos.SeriesResponseDTO;
 import com.mcpikon.cinemawebback.models.Series;
 import com.mcpikon.cinemawebback.services.SeriesService;
 import io.swagger.v3.core.util.Json;
@@ -35,11 +36,11 @@ public class SeriesController {
     @Operation(summary = "Fetch all series", description = "fetches all series and their data from data source")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = Series.class)), mediaType = "application/json") }),
+                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = SeriesResponseDTO.class)), mediaType = "application/json") }),
             @ApiResponse(responseCode = "204", description = "Empty List")
     })
     @GetMapping("/findAll")
-    public ResponseEntity<List<Series>> findAll() {
+    public ResponseEntity<List<SeriesResponseDTO>> findAll() {
         return new ResponseEntity<>(seriesService.findAll(), HttpStatus.OK);
     }
 

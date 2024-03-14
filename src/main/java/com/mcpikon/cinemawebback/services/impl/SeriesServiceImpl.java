@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.SeriesDTO;
+import com.mcpikon.cinemawebback.dtos.SeriesResponseDTO;
 import com.mcpikon.cinemawebback.exceptions.ErrorException;
 import com.mcpikon.cinemawebback.models.Review;
 import com.mcpikon.cinemawebback.models.Series;
@@ -43,14 +44,14 @@ public class SeriesServiceImpl implements SeriesService {
     private ObjectMapper objectMapper;
 
     @Override
-    public List<Series> findAll() throws ErrorException {
+    public List<SeriesResponseDTO> findAll() throws ErrorException {
         log.info("GET series /findAll executed");
-        List<Series> seriesList = seriesRepo.findAll();
-        if (seriesList.isEmpty()) {
+        List<Series> series = seriesRepo.findAll();
+        if (series.isEmpty()) {
             log.error(String.format("Error in series /findAll [%s]", EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
-        return seriesList;
+        return series.stream().map(DTOMapper::seriesToResponseDTO).toList();
     }
 
     @Override

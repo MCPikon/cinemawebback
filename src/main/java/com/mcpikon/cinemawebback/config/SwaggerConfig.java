@@ -13,7 +13,7 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-    @Value("${com.mcpikon.pelisWebBack.dev-url}")
+    @Value("${com.mcpikon.cinemawebback.dev-url}")
     private String devUrl;
 
     @Bean
@@ -30,9 +30,9 @@ public class SwaggerConfig {
         License apacheLicense = new License().name("Apache License 2.0").url("https://choosealicense.com/licenses/apache-2.0/");
 
         Info info = new Info()
-                .title("PelisWebBack")
+                .title("CinemaWebBack")
                 .version("1.0")
-                .description("An API of movies and reviews.")
+                .description("An API of movies, series and it's reviews.")
                 .contact(contact)
                 .license(apacheLicense);
 

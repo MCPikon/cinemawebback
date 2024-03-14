@@ -1,9 +1,6 @@
 package com.mcpikon.cinemawebback.utils;
 
-import com.mcpikon.cinemawebback.dtos.MovieDTO;
-import com.mcpikon.cinemawebback.dtos.ReviewDTO;
-import com.mcpikon.cinemawebback.dtos.ReviewSaveDTO;
-import com.mcpikon.cinemawebback.dtos.SeriesDTO;
+import com.mcpikon.cinemawebback.dtos.*;
 import com.mcpikon.cinemawebback.models.Movie;
 import com.mcpikon.cinemawebback.models.Review;
 import com.mcpikon.cinemawebback.models.Series;
@@ -47,6 +44,11 @@ public class DTOMapper {
                 .reviewIds(movie.getReviewIds()).build();
     }
 
+    public static MovieResponseDTO movieToResponseDTO(Movie movie) {
+        return new MovieResponseDTO(movie.getImdbId(), movie.getTitle(),
+                movie.getDuration(), movie.getReleaseDate(), movie.getPoster());
+    }
+
     // Series DTOs Converters
     public static Series dtoToSeries(SeriesDTO seriesDTO) {
         return Series.builder()
@@ -79,6 +81,10 @@ public class DTOMapper {
                 .poster(seriesDTO.poster())
                 .backdrop(seriesDTO.backdrop())
                 .reviewIds(series.getReviewIds()).build();
+    }
+
+    public static SeriesResponseDTO seriesToResponseDTO(Series series) {
+        return new SeriesResponseDTO(series.getImdbId(), series.getTitle(), series.getNumberOfSeasons(), series.getReleaseDate(), series.getPoster());
     }
 
     // Review DTOs Converters
