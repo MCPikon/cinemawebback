@@ -4,7 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
 
-public record MovieDTO(@NotBlank(message = "imdbId cannot be empty") String imdbId, @NotBlank String title,
-                       String overview, String duration, String director,
+public record MovieDTO(@NotBlank(message = "movie imdbId cannot be empty") String imdbId,
+                       @NotBlank(message = "movie title cannot be empty") String title,
+                       String overview, String duration,
+                       @NotBlank(message = "movie director's name cannot be empty") String director,
                        String releaseDate, String trailerLink,
                        List<String> genres, String poster, String backdrop) { }
