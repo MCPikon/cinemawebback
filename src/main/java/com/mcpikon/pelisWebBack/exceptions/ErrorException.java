@@ -1,27 +1,22 @@
 package com.mcpikon.pelisWebBack.exceptions;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serial;
 
 @Getter
-@Setter
-@NoArgsConstructor
 public class ErrorException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 7358330923614115585L;
 
-    private Long id;
-    private String message;
-    private HttpStatus idStatus;
+    private final Long id;
+    private final String message;
+    private final HttpStatus httpStatus;
 
-    public ErrorException(Errors error, HttpStatus idStatus) {
-        super();
-        this.id = error.getId();
-        this.message = error.getMessage();
-        this.idStatus = idStatus;
+    public ErrorException(Long id, String message, HttpStatus httpStatus) {
+        this.id = id;
+        this.message = message;
+        this.httpStatus = httpStatus;
     }
 }

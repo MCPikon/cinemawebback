@@ -7,11 +7,10 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.pelisWebBack.dtos.ReviewDTO;
 import com.mcpikon.pelisWebBack.dtos.ReviewSaveDTO;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
 import com.mcpikon.pelisWebBack.models.Movie;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.models.Series;
-import com.mcpikon.pelisWebBack.exceptions.ErrorException;
-import com.mcpikon.pelisWebBack.exceptions.Errors;
 import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +29,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.mcpikon.pelisWebBack.exceptions.Errors.*;
 
 @Slf4j
 @Service
@@ -56,8 +56,8 @@ public class ReviewServiceImpl implements ReviewService {
         log.info("GET reviews /findAll executed");
         List<Review> reviews = reviewRepo.findAll();
         if (reviews.isEmpty()) {
-            log.error(String.format("Error in reviews /findAll [%s]", HttpStatus.NO_CONTENT));
-            throw new ErrorException(Errors.EMPTY, HttpStatus.NO_CONTENT);
+            log.error(String.format("Error in reviews /findAll [%s]", EMPTY.getMessage()));
+            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
         return reviews;
     }
@@ -65,18 +65,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<Review> findAllByImdbId(String imdbId) throws ErrorException {
         log.info("GET reviews /findAllByImdbId executed");
+        final String errorLogMsg = "Error in reviews /findAllByImdbId with imdbId: '%s' [%s]";
         List<Review> reviews;
 
         if (movieRepo.existsByImdbId(imdbId)) reviews = movieRepo.findByImdbId(imdbId).orElseThrow().getReviewIds();
         else if (seriesRepo.existsByImdbId(imdbId)) reviews = seriesRepo.findByImdbId(imdbId).orElseThrow().getReviewIds();
         else {
-            log.error(String.format("Error in reviews /findAllByImdbId with imdbId: '%s' [%s]", imdbId, HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format(errorLogMsg, imdbId, NOT_EXISTS.getMessage()));
+            throw new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }
 
         if (reviews.isEmpty()) {
-            log.error(String.format("Error in reviews /findAllByImdbId with imdbId: '%s' [%s]", imdbId, HttpStatus.NO_CONTENT));
-            throw new ErrorException(Errors.EMPTY, HttpStatus.NO_CONTENT);
+            log.error(String.format(errorLogMsg, imdbId, EMPTY.getMessage()));
+            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
         return reviews;
     }
@@ -85,8 +86,8 @@ public class ReviewServiceImpl implements ReviewService {
     public Optional<Review> findById(ObjectId id) throws ErrorException {
         log.info("GET reviews /findById executed");
         return Optional.ofNullable(reviewRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in reviews /findById with id: '%s' [%s]", id, HttpStatus.NOT_FOUND));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND);
+            log.error(String.format("Error in reviews /findById with id: '%s' [%s]", id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }));
     }
 
@@ -111,8 +112,8 @@ public class ReviewServiceImpl implements ReviewService {
                     .matching(Criteria.where(imdbIdKey).is(reviewSaveDTO.imdbId()))
                     .apply(new Update().push(reviewIdsKey).value(review)).first();
         } else {
-            log.error(String.format("Error in reviews /save with imdbId: '%s' [%s]", reviewSaveDTO.imdbId(), HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format("Error in reviews /save with imdbId: '%s' [%s]", reviewSaveDTO.imdbId(), NOT_EXISTS.getMessage()));
+            throw new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }
 
         return review;
@@ -122,8 +123,8 @@ public class ReviewServiceImpl implements ReviewService {
     public Map<String, String> delete(ObjectId id) {
         log.info("DELETE reviews /delete executed");
         Review reviewToDelete = reviewRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in reviews /delete with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format("Error in reviews /delete with id: '%s' [%s]", id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
         reviewRepo.delete(reviewToDelete);
         return Map.of("message", String.format("Review with id: '%s' was successfully deleted", id));
@@ -133,8 +134,8 @@ public class ReviewServiceImpl implements ReviewService {
     public Review update(ObjectId id, ReviewDTO reviewDTO) throws ErrorException {
         log.info("PUT reviews /update executed");
         Review reviewToFind = reviewRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in reviews /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format("Error in reviews /update with id: '%s' [%s]", id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
         Review reviewToUpdate = DTOMapper.dtoToReviewUpdate(reviewToFind, reviewDTO);
         return reviewRepo.save(reviewToUpdate);
@@ -143,15 +144,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Review patch(ObjectId id, JsonPatch jsonPatch) throws ErrorException, JsonPatchException, JsonProcessingException {
         log.info("PATCH reviews /patch executed");
+        final String errorLogMsg = "Error in reviews /patch with id: '%s' [%s]";
+
         Review reviewToPatch = reviewRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in reviews /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format(errorLogMsg, id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
         var jsonPatchList = objectMapper.convertValue(jsonPatch, JsonNode.class);
-        if (jsonPatchList.get(0).get("path").asText().equalsIgnoreCase("/id")) {
-            log.error(String.format("Error in reviews /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.ID_CANNOT_CHANGE, HttpStatus.BAD_REQUEST);
+        String path = jsonPatchList.get(0).get("path").asText();
+        if (path.equalsIgnoreCase("/id")) {
+            log.error(String.format(errorLogMsg, id, ID_CANNOT_CHANGE.getMessage()));
+            throw new ErrorException(ID_CANNOT_CHANGE.getId(), ID_CANNOT_CHANGE.getMessage(), ID_CANNOT_CHANGE.getHttpStatus());
         }
+
         reviewToPatch.setUpdatedAt(LocalDateTime.now());
         JsonNode patched = jsonPatch.apply(objectMapper.convertValue(reviewToPatch, JsonNode.class));
         return reviewRepo.save(objectMapper.treeToValue(patched, Review.class));

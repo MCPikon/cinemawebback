@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.pelisWebBack.dtos.SeriesDTO;
+import com.mcpikon.pelisWebBack.exceptions.ErrorException;
 import com.mcpikon.pelisWebBack.models.Review;
 import com.mcpikon.pelisWebBack.models.Series;
-import com.mcpikon.pelisWebBack.exceptions.ErrorException;
-import com.mcpikon.pelisWebBack.exceptions.Errors;
 import com.mcpikon.pelisWebBack.repositories.MovieRepository;
 import com.mcpikon.pelisWebBack.repositories.ReviewRepository;
 import com.mcpikon.pelisWebBack.repositories.SeriesRepository;
@@ -18,13 +17,14 @@ import com.mcpikon.pelisWebBack.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.mcpikon.pelisWebBack.exceptions.Errors.*;
 
 @Slf4j
 @Service
@@ -47,8 +47,8 @@ public class SeriesServiceImpl implements SeriesService {
         log.info("GET series /findAll executed");
         List<Series> seriesList = seriesRepo.findAll();
         if (seriesList.isEmpty()) {
-            log.error(String.format("Error in series /findAll [%s]", HttpStatus.NO_CONTENT));
-            throw new ErrorException(Errors.EMPTY, HttpStatus.NO_CONTENT);
+            log.error(String.format("Error in series /findAll [%s]", EMPTY.getMessage()));
+            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
         return seriesList;
     }
@@ -57,8 +57,8 @@ public class SeriesServiceImpl implements SeriesService {
     public Optional<Series> findById(ObjectId id) throws ErrorException {
         log.info("GET series /findById executed");
         return Optional.ofNullable(seriesRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in series /findById with id: '%s' [%s]", id, HttpStatus.NOT_FOUND));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND);
+            log.error(String.format("Error in series /findById with id: '%s' [%s]", id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }));
     }
 
@@ -66,8 +66,8 @@ public class SeriesServiceImpl implements SeriesService {
     public Optional<Series> findByImdbId(String imdbId) throws ErrorException {
         log.info("GET series /findByImdbId executed");
         return Optional.ofNullable(seriesRepo.findByImdbId(imdbId).orElseThrow(() -> {
-            log.error(String.format("Error in series /findByImdbId with imdbId: '%s' [%s]", imdbId, HttpStatus.NOT_FOUND));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.NOT_FOUND);
+            log.error(String.format("Error in series /findByImdbId with imdbId: '%s' [%s]", imdbId, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }));
     }
 
@@ -75,8 +75,8 @@ public class SeriesServiceImpl implements SeriesService {
     public Series save(SeriesDTO seriesDTO) throws ErrorException {
         log.info("POST series /save executed");
         if (seriesRepo.existsByImdbId(seriesDTO.imdbId()) || movieRepo.existsByImdbId(seriesDTO.imdbId())) {
-            log.error(String.format("Error in series /save with imdbId: '%s' [%s]", seriesDTO.imdbId(), HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format("Error in series /save with imdbId: '%s' [%s]", seriesDTO.imdbId(), ALREADY_EXISTS.getMessage()));
+            throw new ErrorException(ALREADY_EXISTS.getId(), ALREADY_EXISTS.getMessage(), ALREADY_EXISTS.getHttpStatus());
         }
         Series seriesToSave = DTOMapper.dtoToSeries(seriesDTO);
         return seriesRepo.insert(seriesToSave);
@@ -86,8 +86,8 @@ public class SeriesServiceImpl implements SeriesService {
     public Map<String, String> delete(ObjectId id) throws ErrorException {
         log.info("DELETE series /delete executed");
         Series seriesToDelete = seriesRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in series /delete with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format("Error in series /delete with id: '%s' [%s]", id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
         for (Review review : seriesToDelete.getReviewIds()) {
             reviewRepo.delete(review);
@@ -99,14 +99,15 @@ public class SeriesServiceImpl implements SeriesService {
     @Override
     public Series update(ObjectId id, SeriesDTO seriesDTO) throws ErrorException {
         log.info("PUT series /update executed");
+        final String errorLogMsg = "Error in series /update with id: '%s' [%s]";
         Series seriesToFind = seriesRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in series /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format(errorLogMsg, id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
         if ((movieRepo.existsByImdbId(seriesDTO.imdbId()) || seriesRepo.existsByImdbId(seriesDTO.imdbId()))
                 && !seriesToFind.getImdbId().equalsIgnoreCase(seriesDTO.imdbId())) {
-            log.error(String.format("Error in series /update with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            throw new ErrorException(Errors.IMDB_ID_ALREADY_IN_USE, HttpStatus.BAD_REQUEST);
+            log.error(String.format(errorLogMsg, id, IMDB_ID_ALREADY_IN_USE.getMessage()));
+            throw new ErrorException(IMDB_ID_ALREADY_IN_USE.getId(), IMDB_ID_ALREADY_IN_USE.getMessage(), IMDB_ID_ALREADY_IN_USE.getHttpStatus());
         }
         Series seriesToUpdate = DTOMapper.dtoToSeriesUpdate(seriesToFind, seriesDTO);
         return seriesRepo.save(seriesToUpdate);
@@ -115,10 +116,26 @@ public class SeriesServiceImpl implements SeriesService {
     @Override
     public Series patch(ObjectId id, JsonPatch jsonPatch) throws ErrorException, JsonPatchException, JsonProcessingException {
         log.info("PATCH series /patch executed");
+        final String errorLogMsg = "Error in series /patch with id: '%s' [%s]";
+
         Series seriesToPatch = seriesRepo.findById(id).orElseThrow(() -> {
-            log.error(String.format("Error in series /patch with id: '%s' [%s]", id, HttpStatus.BAD_REQUEST));
-            return new ErrorException(Errors.NOT_EXISTS, HttpStatus.BAD_REQUEST);
+            log.error(String.format(errorLogMsg, id, NOT_EXISTS.getMessage()));
+            return new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         });
+        var jsonPatchList = objectMapper.convertValue(jsonPatch, JsonNode.class);
+        String path = jsonPatchList.get(0).get("path").asText();
+        String value = jsonPatchList.get(0).get("value").asText();
+
+        if (path.equalsIgnoreCase("/id")) {
+            log.error(String.format(errorLogMsg, id, ID_CANNOT_CHANGE.getMessage()));
+            throw new ErrorException(ID_CANNOT_CHANGE.getId(), ID_CANNOT_CHANGE.getMessage(), ID_CANNOT_CHANGE.getHttpStatus());
+        } else if (path.equalsIgnoreCase("/imdbId")
+                && ((movieRepo.existsByImdbId(value) || seriesRepo.existsByImdbId(value))
+                && !seriesToPatch.getImdbId().equalsIgnoreCase(value))) {
+            log.error(String.format(errorLogMsg, id, IMDB_ID_ALREADY_IN_USE.getMessage()));
+            throw new ErrorException(IMDB_ID_ALREADY_IN_USE.getId(), IMDB_ID_ALREADY_IN_USE.getMessage(), IMDB_ID_ALREADY_IN_USE.getHttpStatus());
+        }
+
         JsonNode patched = jsonPatch.apply(objectMapper.convertValue(seriesToPatch, JsonNode.class));
         return seriesRepo.save(objectMapper.treeToValue(patched, Series.class));
     }

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -71,7 +72,7 @@ public class MovieController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A movie or series with the ImdbId passed already exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<Movie> save(@RequestBody MovieDTO movieDTO) {
+    public ResponseEntity<Movie> save(@Valid @RequestBody MovieDTO movieDTO) {
         return new ResponseEntity<>(movieService.save(movieDTO), HttpStatus.CREATED);
     }
 
@@ -93,7 +94,7 @@ public class MovieController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the id passed doesn't exists)")
     })
     @PutMapping("/update/{id}")
-    public ResponseEntity<Movie> update(@PathVariable ObjectId id, @RequestBody MovieDTO movieDTO) {
+    public ResponseEntity<Movie> update(@PathVariable ObjectId id, @Valid @RequestBody MovieDTO movieDTO) {
         return new ResponseEntity<>(movieService.update(id, movieDTO), HttpStatus.OK);
     }
 

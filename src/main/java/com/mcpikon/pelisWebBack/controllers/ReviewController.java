@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -72,7 +73,7 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed doesn't exists)")
     })
     @PostMapping("/save")
-    public ResponseEntity<Review> save(@RequestBody ReviewSaveDTO reviewSaveDTO) {
+    public ResponseEntity<Review> save(@Valid @RequestBody ReviewSaveDTO reviewSaveDTO) {
         return new ResponseEntity<>(reviewService.save(reviewSaveDTO), HttpStatus.CREATED);
     }
 
@@ -95,7 +96,7 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
     })
     @PutMapping("/update/{id}")
-    public ResponseEntity<Review> update(@PathVariable ObjectId id, @RequestBody ReviewDTO reviewDTO) {
+    public ResponseEntity<Review> update(@PathVariable ObjectId id, @Valid @RequestBody ReviewDTO reviewDTO) {
         return new ResponseEntity<>(reviewService.update(id, reviewDTO), HttpStatus.OK);
     }
 

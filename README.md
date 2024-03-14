@@ -31,6 +31,7 @@ Este proyecto realiza un CRUD (Crear, Modificar y Eliminar) de Películas, Serie
     * Spring Boot Starter Web
     * Spring Boot Starter Test
     * Spring Boot Starter Actuator
+    * Spring Boot Starter Validation
     * Spring Boot DevTools
     * Lombok
     * spring-dotenv (4.0.0)

@@ -35,4 +35,23 @@ public class Series {
     private String backdrop;
     @DocumentReference
     private List<Review> reviewIds;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Season {
+        private String overview;
+        private List<Episode> episodeList;
+        private String poster;
+
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class Episode {
+            private String title;
+            private String releaseDate;
+            private String duration;
+            private String description;
+        }
+    }
 }
