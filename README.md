@@ -11,16 +11,16 @@
 
 ## ✨ Descripción
 
-REST API de películas, series y reseñas de las mismas.
+API REST de películas, series y reseñas de las mismas.
 
 > [!TIP]
 > Este proyecto utiliza Swagger UI para la documentación.
 > 
-> Para visitar la web de documentación en local visita esta url: **http://localhost:8080/api/v1/docs** 
+> Para consultar la web de documentación en local visita esta url: **http://localhost:8080/api/v1/docs** 
 
 ## 💡 Cómo funciona
 
-Este proyecto realiza un CRUD (Crear, Modificar y Eliminar) de Películas, Series y sus Reseñas. Disponen de entidades, repositorios, servicios e implementaciones de servicios.
+Este proyecto realiza un CRUD (Crear, Obtener, Modificar y Eliminar) de Películas, Series y sus Reseñas. Disponen de entidades, DTOs, repositorios, servicios e implementaciones de los mismos.
 
 ## 🛠 Tecnologías
 
