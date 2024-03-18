@@ -37,6 +37,9 @@ Este proyecto realiza un CRUD (Crear, Obtener, Modificar y Eliminar) de Películ
     * spring-dotenv (4.0.0)
     * SpringDoc OpenAPI Starter WebMVC UI (2.3.0)
     * java-json-tools _(json-patch)_ (1.13)
+    * Spring Boot Testcontainers
+    * Testcontainers junit-jupiter
+    * Testcontainers mongodb
 
 ## 📄 Licencia
 
