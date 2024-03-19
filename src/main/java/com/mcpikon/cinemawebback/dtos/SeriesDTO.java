@@ -5,9 +5,11 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
 import java.util.List;
 
+@Builder
 public record SeriesDTO(@NotBlank(message = "series imdbId cannot be empty") String imdbId,
                         @NotBlank String title, String overview,
                         @NotNull(message = "number of seasons cannot be null")

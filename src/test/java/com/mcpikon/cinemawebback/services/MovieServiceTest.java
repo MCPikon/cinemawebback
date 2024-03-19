@@ -84,7 +84,7 @@ class MovieServiceTest {
 
     @Test
     @DisplayName("Find Movie By Id - Throws Not Exists")
-    void findMovieById_thenThrowNotFound() {
+    void findMovieById_thenThrowNotExists() {
         ObjectId id = new ObjectId();
         ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findById(id), "ErrorException was expected");
         assertEquals("Entity doesn't exists", thrown.getMessage());
