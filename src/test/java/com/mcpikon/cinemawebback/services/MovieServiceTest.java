@@ -84,7 +84,7 @@ class MovieServiceTest {
 
     @Test
     @DisplayName("Find Movie By Id - Throws Not Exists")
-    void findMovieById_thenThrowNotExists() {
+    void findMovieById_thenThrowsNotExists() {
         ObjectId id = new ObjectId();
         ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findById(id), "ErrorException was expected");
         assertEquals("Entity doesn't exists", thrown.getMessage());
@@ -134,7 +134,7 @@ class MovieServiceTest {
 
     @Test
     @DisplayName("Delete Movie By Id - OK")
-    void deleteMovieById_thenReturnOk() {
+    void deleteMovieById_thenReturnsOk() {
         ObjectId id = new ObjectId();
         List<Review> reviewList = List.of(
                 Review.builder().title("review 1").build(),
