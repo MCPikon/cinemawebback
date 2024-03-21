@@ -81,7 +81,7 @@ public class MovieController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Json.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, String>> delete(@PathVariable ObjectId id) {
@@ -92,7 +92,8 @@ public class MovieController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Movie.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Found"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The ImdbId passed is already in use)")
     })
     @PutMapping("/update/{id}")
     public ResponseEntity<Movie> update(@PathVariable ObjectId id, @Valid @RequestBody MovieDTO movieDTO) {
@@ -103,7 +104,9 @@ public class MovieController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Movie.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The movie with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Exists"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The Id key cannot be changed)"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The ImdbId passed is already in use)")
     })
     @PatchMapping("/patch/{id}")
     public ResponseEntity<Movie> patch(@PathVariable ObjectId id, @RequestBody JsonPatch jsonPatch) throws JsonPatchException, JsonProcessingException {

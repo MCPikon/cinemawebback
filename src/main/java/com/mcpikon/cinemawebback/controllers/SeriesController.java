@@ -81,7 +81,7 @@ public class SeriesController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Json.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Exists")
     })
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, String>> delete(@PathVariable ObjectId id) {
@@ -92,7 +92,8 @@ public class SeriesController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Series.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Exists"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The ImdbId passed is already in use)")
     })
     @PutMapping("/update/{id}")
     public ResponseEntity<Series> update(@PathVariable ObjectId id, @Valid @RequestBody SeriesDTO seriesDTO) {
@@ -103,7 +104,9 @@ public class SeriesController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = { @Content(schema = @Schema(implementation = Series.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The series with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Exists"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The Id key cannot be changed)"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The ImdbId passed is already in use)")
     })
     @PatchMapping("/patch/{id}")
     public ResponseEntity<Series> patch(@PathVariable ObjectId id, @RequestBody JsonPatch jsonPatch) throws JsonPatchException, JsonProcessingException {
