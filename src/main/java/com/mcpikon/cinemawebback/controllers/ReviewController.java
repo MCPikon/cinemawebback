@@ -48,6 +48,7 @@ public class ReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = {@Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404", description = "Not Found"),
             @ApiResponse(responseCode = "204", description = "Empty List")
     })
     @GetMapping("/findAllByImdbId/{imdbId}")
@@ -70,7 +71,7 @@ public class ReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Created",
                     content = {@Content(schema = @Schema(implementation = Review.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", description = "Bad Request (A series or movie with the ImdbId passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Movie or Series with imdbId passed not found")
     })
     @PostMapping("/save")
     public ResponseEntity<Review> save(@Valid @RequestBody ReviewSaveDTO reviewSaveDTO) {
@@ -81,7 +82,7 @@ public class ReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = {@Content(schema = @Schema(implementation = Json.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, String>> delete(@PathVariable ObjectId id) {
@@ -92,8 +93,7 @@ public class ReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = {@Content(schema = @Schema(implementation = Review.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The api can't parse the String id to ObjectId)"),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @PutMapping("/update/{id}")
     public ResponseEntity<Review> update(@PathVariable ObjectId id, @Valid @RequestBody ReviewDTO reviewDTO) {
@@ -104,7 +104,8 @@ public class ReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
                     content = {@Content(schema = @Schema(implementation = Review.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", description = "Bad Request (The review with the id passed doesn't exists)")
+            @ApiResponse(responseCode = "404", description = "Not Found"),
+            @ApiResponse(responseCode = "400", description = "Bad Request (The review id cannot be changed)")
     })
     @PatchMapping("/patch/{id}")
     public ResponseEntity<Review> patch(@PathVariable ObjectId id, @RequestBody JsonPatch jsonPatch) throws JsonPatchException, JsonProcessingException {
