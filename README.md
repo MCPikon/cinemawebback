@@ -22,6 +22,12 @@ API REST de películas, series y reseñas de las mismas.
 
 Este proyecto realiza un CRUD (Crear, Obtener, Modificar y Eliminar) de Películas, Series y sus Reseñas. Disponen de entidades, DTOs, repositorios, servicios e implementaciones de los mismos.
 
+## ✅ Testing
+
+El testing del proyecto utiliza las dependencias JUnit 5, Mockito, WebMVCTest y Testcontainers. Hay archivos de test para los paquetes de controladores, repositorios, servicios y utilidades.
+
+La cobertura total de lineas del proyecto es de un **94%**.
+
 ## 🛠 Tecnologías
 
 * Java 17

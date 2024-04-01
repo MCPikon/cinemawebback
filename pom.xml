@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.3</version>
+		<version>3.2.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mcpikon</groupId>
 	<artifactId>cinemawebback</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<name>cinemaWebBack</name>
 	<description>An API related to movies, series and its reviews</description>
 	<properties>
