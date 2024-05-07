@@ -28,8 +28,8 @@ class DTOMapperTest {
         seriesMock = Series.builder().id(new ObjectId()).imdbId("tt54321").title("series test").build();
         seriesDTOMock = SeriesDTO.builder().imdbId("tt54321").title("series test").build();
         reviewMock = Review.builder().id(new ObjectId()).title("review test").body("review to test").build();
-        reviewDTOMock = ReviewDTO.builder().title("review test").body("review to test").build();
-        reviewSaveDTOMock = ReviewSaveDTO.builder().imdbId("tt24681").title("review test").body("review to test").build();
+        reviewDTOMock = ReviewDTO.builder().title("review test").rating(1).body("review to test").build();
+        reviewSaveDTOMock = ReviewSaveDTO.builder().imdbId("tt24681").title("review test").rating(1).body("review to test").build();
     }
 
     @Test

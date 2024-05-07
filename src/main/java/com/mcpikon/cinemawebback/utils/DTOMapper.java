@@ -91,6 +91,7 @@ public class DTOMapper {
     public static Review dtoToReview(ReviewSaveDTO reviewSaveDTO) {
         return Review.builder()
                 .title(reviewSaveDTO.title())
+                .rating(reviewSaveDTO.rating())
                 .body(reviewSaveDTO.body())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -101,6 +102,7 @@ public class DTOMapper {
         return Review.builder()
                 .id(review.getId())
                 .title(reviewDTO.title())
+                .rating(reviewDTO.rating())
                 .body(reviewDTO.body())
                 .createdAt(review.getCreatedAt())
                 .updatedAt(LocalDateTime.now())

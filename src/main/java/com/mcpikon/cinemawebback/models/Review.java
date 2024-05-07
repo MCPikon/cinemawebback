@@ -22,14 +22,8 @@ public class Review {
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId id;
     private String title;
+    private int rating;
     private String body;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public Review(String title, String body, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.title = title;
-        this.body = body;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
 }

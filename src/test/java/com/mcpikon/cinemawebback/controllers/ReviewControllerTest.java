@@ -58,12 +58,12 @@ class ReviewControllerTest {
     @BeforeEach
     void init() {
         reviewList = List.of(
-                Review.builder().title("review 1").body("review 1 test").build(),
-                Review.builder().title("review 2").body("review 2 test").build());
+                Review.builder().title("review 1").rating(1).body("review 1 test").build(),
+                Review.builder().title("review 2").rating(1).body("review 2 test").build());
         imdbId = "tt54321";
-        review = Review.builder().id(new ObjectId()).title("review test").body("review to test").updatedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build();
-        reviewDTO = ReviewDTO.builder().title("review test").body("review to test").build();
-        reviewSaveDTO = ReviewSaveDTO.builder().title("review test").body("review to test").imdbId("tt12345").build();
+        review = Review.builder().id(new ObjectId()).title("review test").rating(1).body("review to test").updatedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build();
+        reviewDTO = ReviewDTO.builder().title("review test").rating(1).body("review to test").build();
+        reviewSaveDTO = ReviewSaveDTO.builder().title("review test").rating(1).body("review to test").imdbId("tt12345").build();
         jsonPatchMap = List.of(Map.of("op", "replace", "path", "/title", "value", "review test"));
     }
 
