@@ -86,6 +86,27 @@ class MovieControllerTest {
     }
 
     @Test
+    @DisplayName("Find All Movies By Title - OK (200)")
+    void findAllMoviesByTitle_thenReturnOk() throws Exception {
+        when(movieService.findAllByTitle(movie.getTitle())).thenReturn(movieResDTOList);
+        mockMvc.perform(get("/api/v1/movies/findAllByTitle/{title}", movie.getTitle())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("movie 1 test"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("Find All Movies By Title - No Content (204)")
+    void findAllMoviesByTitle_thenReturnNoContent() throws Exception {
+        when(movieService.findAllByTitle(movie.getTitle()))
+                .thenThrow(new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
+        mockMvc.perform(get("/api/v1/movies/findAllByTitle/{title}", movie.getTitle())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()).andDo(print());
+    }
+
+    @Test
     @DisplayName("Find Movie By Id - OK (200)")
     void findMovieById_thenReturnOk() throws Exception {
         when(movieService.findById(movie.getId())).thenReturn(Optional.of(movie));

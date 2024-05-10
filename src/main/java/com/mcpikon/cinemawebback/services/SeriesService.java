@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public interface SeriesService {
     List<SeriesResponseDTO> findAll() throws ErrorException;
+    List<SeriesResponseDTO> findAllByTitle(String title) throws ErrorException;
     Optional<Series> findById(ObjectId id) throws ErrorException;
     Optional<Series> findByImdbId(String imdbId) throws ErrorException;
     Series save(SeriesDTO seriesDTO) throws ErrorException;

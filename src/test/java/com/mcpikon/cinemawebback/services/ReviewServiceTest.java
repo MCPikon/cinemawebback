@@ -82,8 +82,8 @@ class ReviewServiceTest {
     }
 
     @Test
-    @DisplayName("Find All Reviews By ImdbId - OK")
-    void findAllReviewsByImdbId_thenReturnList() {
+    @DisplayName("Find All Reviews By ImdbId - OK (Exists By Movie ImdbId)")
+    void findAllReviewsByImdbId_whenExistsByMovieImdbId_thenReturnList() {
         String imdbId = "tt12345";
         List<Review> reviewList = List.of(
                 Review.builder().title("review 1").build(),
@@ -91,6 +91,22 @@ class ReviewServiceTest {
         Movie movie = Movie.builder().imdbId(imdbId).reviewIds(reviewList).build();
         when(movieRepo.existsByImdbId(imdbId)).thenReturn(true);
         when(movieRepo.findByImdbId(imdbId)).thenReturn(Optional.of(movie));
+
+        List<Review> reviewsFoundedList = reviewService.findAllByImdbId(imdbId);
+        assertNotNull(reviewsFoundedList);
+        assertEquals(reviewList.size(), reviewsFoundedList.size());
+    }
+
+    @Test
+    @DisplayName("Find All Reviews By ImdbId - OK (Exists By Series ImdbId)")
+    void findAllReviewsByImdbId_whenExistsBySeriesImdbId_thenReturnList() {
+        String imdbId = "tt12345";
+        List<Review> reviewList = List.of(
+                Review.builder().title("review 1").build(),
+                Review.builder().title("review 2").build());
+        Series series = Series.builder().imdbId(imdbId).reviewIds(reviewList).build();
+        when(seriesRepo.existsByImdbId(imdbId)).thenReturn(true);
+        when(seriesRepo.findByImdbId(imdbId)).thenReturn(Optional.of(series));
 
         List<Review> reviewsFoundedList = reviewService.findAllByImdbId(imdbId);
         assertNotNull(reviewsFoundedList);

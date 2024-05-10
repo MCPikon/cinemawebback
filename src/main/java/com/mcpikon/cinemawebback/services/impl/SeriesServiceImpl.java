@@ -55,6 +55,18 @@ public class SeriesServiceImpl implements SeriesService {
     }
 
     @Override
+    public List<SeriesResponseDTO> findAllByTitle(String title) throws ErrorException {
+        log.info("GET series /findAllByTitle executed");
+        if (title == null) title = "";
+        List<Series> series = seriesRepo.findAllByTitle(title);
+        if (series.isEmpty()) {
+            log.error(String.format("Error in series /findAllByTitle with title: '%s' [%s]", title, EMPTY.getMessage()));
+            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
+        }
+        return series.stream().map(DTOMapper::seriesToResponseDTO).toList();
+    }
+
+    @Override
     public Optional<Series> findById(ObjectId id) throws ErrorException {
         log.info("GET series /findById executed");
         return Optional.ofNullable(seriesRepo.findById(id).orElseThrow(() -> {

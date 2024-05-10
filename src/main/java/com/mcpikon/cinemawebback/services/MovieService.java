@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public interface MovieService {
     List<MovieResponseDTO> findAll() throws ErrorException;
+    List<MovieResponseDTO> findAllByTitle(String title) throws ErrorException;
     Optional<Movie> findById(ObjectId id) throws ErrorException;
     Optional<Movie> findByImdbId(String imdbId) throws ErrorException;
     Movie save(MovieDTO movieDTO) throws ErrorException;

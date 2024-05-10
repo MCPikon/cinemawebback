@@ -76,6 +76,26 @@ class SeriesServiceTest {
     }
 
     @Test
+    @DisplayName("Find All Series By Title - OK")
+    void findAllSeriesByTitle_thenReturnList() {
+        List<Series> seriesList = List.of(
+                Series.builder().title("series 1").build(),
+                Series.builder().title("series 2").build());
+        when(seriesRepo.findAllByTitle("")).thenReturn(seriesList);
+        List<SeriesResponseDTO> seriesFoundedList = seriesService.findAllByTitle(null);
+        assertNotNull(seriesFoundedList);
+        assertEquals(seriesList.size(), seriesFoundedList.size());
+    }
+
+    @Test
+    @DisplayName("Find All Series By Title - Throws Empty List")
+    void findAllSeriesByTitle_thenThrowsEmptyList() {
+        when(seriesRepo.findAllByTitle("test")).thenReturn(new ArrayList<>());
+        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.findAllByTitle("test"), "ErrorException was expected");
+        assertEquals("Empty List", thrown.getMessage());
+    }
+
+    @Test
     @DisplayName("Find Series By Id - OK")
     void findSeriesById_thenReturnsSeries() {
         ObjectId id = new ObjectId();
@@ -128,9 +148,18 @@ class SeriesServiceTest {
     }
 
     @Test
-    @DisplayName("Save Series - Throws Already Exists")
-    void saveSeries_thenThrowsNotExists() {
+    @DisplayName("Save Series - Throws Series Already Exists")
+    void saveSeries_thenThrowsSeriesNotExists() {
         when(seriesRepo.existsByImdbId(any(String.class))).thenReturn(true);
+        SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt12345").build();
+        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.save(seriesDTO), "ErrorException was expected");
+        assertEquals("Entity already exists", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Save Series - Throws Movie Already Exists")
+    void saveSeries_thenThrowsMovieNotExists() {
+        when(movieRepo.existsByImdbId(any(String.class))).thenReturn(true);
         SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt12345").build();
         ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.save(seriesDTO), "ErrorException was expected");
         assertEquals("Entity already exists", thrown.getMessage());
@@ -160,8 +189,8 @@ class SeriesServiceTest {
     }
 
     @Test
-    @DisplayName("Update Series By Id - OK")
-    void updateSeriesById_thenReturnsSeries() {
+    @DisplayName("Update Series By Id - OK (Exists By ImdbId)")
+    void updateSeriesById_whenExistsByImdbId_thenReturnsSeries() {
         ObjectId id = new ObjectId();
         Series seriesGiven = Series.builder().id(id).imdbId("tt12345").title("series to update").build();
         SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt54321").title("series updated").build();
@@ -169,6 +198,22 @@ class SeriesServiceTest {
 
         when(seriesRepo.findById(id)).thenReturn(Optional.of(seriesGiven));
         when(movieRepo.existsByImdbId(seriesDTO.imdbId())).thenReturn(false);
+        when(seriesRepo.save(seriesUpdated)).thenReturn(seriesUpdated);
+
+        Series series = seriesService.update(id, seriesDTO);
+        assertNotNull(series);
+    }
+
+    @Test
+    @DisplayName("Update Series By Id - OK (Equal ImdbId)")
+    void updateSeriesById_whenEqualImdbId_thenReturnsSeries() {
+        ObjectId id = new ObjectId();
+        Series seriesGiven = Series.builder().id(id).imdbId("tt12345").title("series to update").build();
+        SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt12345").title("series updated").build();
+        Series seriesUpdated = Series.builder().id(id).imdbId("tt12345").title("series updated").build();
+
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(seriesGiven));
+        when(movieRepo.existsByImdbId(seriesDTO.imdbId())).thenReturn(true);
         when(seriesRepo.save(seriesUpdated)).thenReturn(seriesUpdated);
 
         Series series = seriesService.update(id, seriesDTO);
@@ -185,8 +230,22 @@ class SeriesServiceTest {
     }
 
     @Test
-    @DisplayName("Update Series By Id - Throws ImdbId in use")
-    void updateSeriesById_thenThrowsImdbIdInUse() {
+    @DisplayName("Update Series By Id - Throws ImdbId in use by Series")
+    void updateSeriesById_thenThrowsImdbIdInUseBySeries() {
+        ObjectId id = new ObjectId();
+        Series seriesGiven = Series.builder().id(id).imdbId("tt12345").title("series to update").build();
+        SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt54321").title("series updated").build();
+
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(seriesGiven));
+        when(seriesRepo.existsByImdbId(seriesDTO.imdbId())).thenReturn(true);
+
+        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.update(id, seriesDTO));
+        assertEquals("The imdbId passed is already in use", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Update Series By Id - Throws ImdbId in use by Movie")
+    void updateSeriesById_thenThrowsImdbIdInUseByMovie() {
         ObjectId id = new ObjectId();
         Series seriesGiven = Series.builder().id(id).imdbId("tt12345").title("series to update").build();
         SeriesDTO seriesDTO = SeriesDTO.builder().imdbId("tt54321").title("series updated").build();
@@ -215,6 +274,90 @@ class SeriesServiceTest {
         when(jsonNode.get("value")).thenReturn(jsonNode);
         when(jsonNode.asText()).thenReturn("series patched");
 
+        when(objectMapper.treeToValue(null, Series.class)).thenReturn(series);
+        when(seriesRepo.save(series)).thenReturn(series);
+
+        Series seriesPatched = seriesService.patch(id, jsonPatch);
+        assertNotNull(seriesPatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Series.class);
+    }
+
+    @Test
+    @DisplayName("Patch Series By Id - OK (Not Exists by Series ImdbId)")
+    void patchSeriesById_whenNotExistsBySeriesImdbId_thenReturnsSeries() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Series series = Series.builder().id(id).imdbId("tt12345").title("series to patch").build();
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(series));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(seriesRepo.existsByImdbId("tt54321")).thenReturn(false);
+        when(objectMapper.treeToValue(null, Series.class)).thenReturn(series);
+        when(seriesRepo.save(series)).thenReturn(series);
+
+        Series seriesPatched = seriesService.patch(id, jsonPatch);
+        assertNotNull(seriesPatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Series.class);
+    }
+
+    @Test
+    @DisplayName("Patch Series By Id - OK (Not Exists by Movie ImdbId)")
+    void patchSeriesById_whenNotExistsByMovieImdbId_thenReturnsSeries() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Series series = Series.builder().id(id).imdbId("tt12345").title("series to patch").build();
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(series));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(movieRepo.existsByImdbId("tt54321")).thenReturn(false);
+        when(objectMapper.treeToValue(null, Series.class)).thenReturn(series);
+        when(seriesRepo.save(series)).thenReturn(series);
+
+        Series seriesPatched = seriesService.patch(id, jsonPatch);
+        assertNotNull(seriesPatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Series.class);
+    }
+
+    @Test
+    @DisplayName("Patch Series By Id - OK (Equal ImdbId)")
+    void patchSeriesById_whenEqualImdbId_thenReturnsSeries() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Series series = Series.builder().id(id).imdbId("tt54321").title("series to patch").build();
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(series));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(seriesRepo.existsByImdbId("tt54321")).thenReturn(true);
         when(objectMapper.treeToValue(null, Series.class)).thenReturn(series);
         when(seriesRepo.save(series)).thenReturn(series);
 
@@ -255,8 +398,8 @@ class SeriesServiceTest {
     }
 
     @Test
-    @DisplayName("Patch Series by Id - Throws ImdbId in use")
-    void patchSeriesById_thenThrowsImdbIdInUse() {
+    @DisplayName("Patch Series by Id - Throws ImdbId in use by Series")
+    void patchSeriesById_thenThrowsImdbIdInUseBySeries() {
         ObjectId id = new ObjectId();
         Series series = Series.builder().id(id).title("series to patch").imdbId("tt12345").build();
         when(seriesRepo.findById(id)).thenReturn(Optional.of(series));
@@ -273,6 +416,30 @@ class SeriesServiceTest {
         when(innerJnValue.asText()).thenReturn("tt54321");
 
         when(seriesRepo.existsByImdbId("tt54321")).thenReturn(true);
+
+        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.patch(id, jsonPatch), "ErrorException was expected");
+        assertEquals("The imdbId passed is already in use", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Patch Series by Id - Throws ImdbId in use by Movie")
+    void patchSeriesById_thenThrowsImdbIdInUseByMovie() {
+        ObjectId id = new ObjectId();
+        Series series = Series.builder().id(id).title("series to patch").imdbId("tt12345").build();
+        when(seriesRepo.findById(id)).thenReturn(Optional.of(series));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(movieRepo.existsByImdbId("tt54321")).thenReturn(true);
 
         ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.patch(id, jsonPatch), "ErrorException was expected");
         assertEquals("The imdbId passed is already in use", thrown.getMessage());

@@ -72,6 +72,26 @@ class MovieServiceTest {
     }
 
     @Test
+    @DisplayName("Find All Movies By Title - OK")
+    void findAllMoviesByTitle_thenReturnList() {
+        List<Movie> movieList = new ArrayList<>(Arrays.asList(
+                Movie.builder().title("movie 1").build(),
+                Movie.builder().title("movie 2").build()));
+        when(movieRepo.findAllByTitle("")).thenReturn(movieList);
+        List<MovieResponseDTO> movieFoundedList = movieService.findAllByTitle(null);
+        assertNotNull(movieFoundedList);
+        assertEquals(movieList.size(), movieFoundedList.size());
+    }
+
+    @Test
+    @DisplayName("Find All Movies By Title - Empty List")
+    void findAllMoviesByTitle_thenReturnEmptyList() {
+        when(movieRepo.findAllByTitle("test")).thenReturn(new ArrayList<>());
+        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findAllByTitle("test"), "ErrorException was expected");
+        assertEquals("Empty List", thrown.getMessage());
+    }
+
+    @Test
     @DisplayName("Find Movie By Id - OK")
     void findMovieById_thenReturnsMovie() {
         ObjectId id = new ObjectId();
@@ -124,9 +144,18 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("Save Movie - Throws Already Exists")
-    void saveMovie_thenThrowsAlreadyExists() {
+    @DisplayName("Save Movie - Throws Movie Already Exists")
+    void saveMovie_thenThrowsMovieAlreadyExists() {
         when(movieRepo.existsByImdbId(any(String.class))).thenReturn(true);
+        MovieDTO movieDTO = MovieDTO.builder().imdbId("12345").build();
+        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.save(movieDTO), "ErrorException was expected");
+        assertEquals("Entity already exists", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Save Movie - Throws Series Already Exists")
+    void saveMovie_thenThrowsSeriesAlreadyExists() {
+        when(seriesRepo.existsByImdbId(any(String.class))).thenReturn(true);
         MovieDTO movieDTO = MovieDTO.builder().imdbId("12345").build();
         ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.save(movieDTO), "ErrorException was expected");
         assertEquals("Entity already exists", thrown.getMessage());
@@ -156,8 +185,8 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("Update Movie By Id - OK")
-    void updateMovieById_thenReturnsMovie() {
+    @DisplayName("Update Movie By Id - OK (Exists By ImdbId)")
+    void updateMovieById_whenExistsByImdbId_thenReturnsMovie() {
         ObjectId id = new ObjectId();
         Movie movieGiven = Movie.builder().id(id).imdbId("tt12345").title("movie to update").build();
         MovieDTO movieDTO = MovieDTO.builder().imdbId("tt54321").title("movie updated").build();
@@ -165,6 +194,23 @@ class MovieServiceTest {
 
         when(movieRepo.findById(id)).thenReturn(Optional.of(movieGiven));
         when(movieRepo.existsByImdbId(movieDTO.imdbId())).thenReturn(false);
+        when(movieRepo.save(movieUpdated)).thenReturn(movieUpdated);
+
+        Movie movie = movieService.update(id, movieDTO);
+        assertNotNull(movie);
+    }
+
+    @Test
+    @DisplayName("Update Movie by Id - OK (Equal ImdbId)")
+    void updateMovieById_whenEqualImdbId_thenReturnsMovie() {
+        ObjectId id = new ObjectId();
+        Movie movieGiven = Movie.builder().id(id).imdbId("tt12345").title("movie to update").build();
+        Movie movieUpdated = Movie.builder().id(id).imdbId("tt12345").title("movie updated").build();
+        MovieDTO movieDTO = MovieDTO.builder().imdbId("tt12345").title("movie updated").build();
+
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movieGiven));
+        when(movieRepo.existsByImdbId(movieDTO.imdbId())).thenReturn(true);
+
         when(movieRepo.save(movieUpdated)).thenReturn(movieUpdated);
 
         Movie movie = movieService.update(id, movieDTO);
@@ -181,14 +227,28 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("Update Movie by Id - Throws ImdbId in use")
-    void updateMovieById_thenThrowsImdbIdInUse() {
+    @DisplayName("Update Movie by Id - Throws ImdbId in use by Movie")
+    void updateMovieById_thenThrowsImdbIdInUseByMovie() {
         ObjectId id = new ObjectId();
         Movie movieGiven = Movie.builder().id(id).imdbId("tt12345").title("movie to update").build();
         MovieDTO movieDTO = MovieDTO.builder().imdbId("tt54321").title("movie updated").build();
 
         when(movieRepo.findById(id)).thenReturn(Optional.of(movieGiven));
         when(movieRepo.existsByImdbId(movieDTO.imdbId())).thenReturn(true);
+
+        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.update(id, movieDTO), "ErrorException was expected");
+        assertEquals("The imdbId passed is already in use", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Update Movie by Id - Throws ImdbId in use by Series")
+    void updateMovieById_thenThrowsImdbIdInUseBySeries() {
+        ObjectId id = new ObjectId();
+        Movie movieGiven = Movie.builder().id(id).imdbId("tt12345").title("movie to update").build();
+        MovieDTO movieDTO = MovieDTO.builder().imdbId("tt54321").title("movie updated").build();
+
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movieGiven));
+        when(seriesRepo.existsByImdbId(movieDTO.imdbId())).thenReturn(true);
 
         ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.update(id, movieDTO), "ErrorException was expected");
         assertEquals("The imdbId passed is already in use", thrown.getMessage());
@@ -211,6 +271,90 @@ class MovieServiceTest {
         when(jsonNode.get("value")).thenReturn(jsonNode);
         when(jsonNode.asText()).thenReturn("movie patched");
 
+        when(objectMapper.treeToValue(null, Movie.class)).thenReturn(movie);
+        when(movieRepo.save(movie)).thenReturn(movie);
+
+        Movie moviePatched = movieService.patch(id, jsonPatch);
+        assertNotNull(moviePatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Movie.class);
+    }
+
+    @Test
+    @DisplayName("Patch Movie by Id - OK (Not Exists by Movie ImdbId)")
+    void patchMovieById_whenNotExistsByMovieImdbId_thenReturnsMovie() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Movie movie = Movie.builder().id(id).title("movie to patch").imdbId("tt12345").build();
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movie));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(movieRepo.existsByImdbId("tt54321")).thenReturn(false);
+        when(objectMapper.treeToValue(null, Movie.class)).thenReturn(movie);
+        when(movieRepo.save(movie)).thenReturn(movie);
+
+        Movie moviePatched = movieService.patch(id, jsonPatch);
+        assertNotNull(moviePatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Movie.class);
+    }
+
+    @Test
+    @DisplayName("Patch Movie by Id - OK (Not Exists by Series ImdbId)")
+    void patchMovieById_whenNotExistsBySeriesImdbId_thenReturnsMovie() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Movie movie = Movie.builder().id(id).title("movie to patch").imdbId("tt12345").build();
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movie));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(seriesRepo.existsByImdbId("tt54321")).thenReturn(false);
+        when(objectMapper.treeToValue(null, Movie.class)).thenReturn(movie);
+        when(movieRepo.save(movie)).thenReturn(movie);
+
+        Movie moviePatched = movieService.patch(id, jsonPatch);
+        assertNotNull(moviePatched);
+        verify(objectMapper, times(2)).convertValue(any(), eq(JsonNode.class));
+        verify(objectMapper, times(1)).treeToValue(null, Movie.class);
+    }
+
+    @Test
+    @DisplayName("Patch Movie by Id - OK (Equal ImdbId)")
+    void patchMovieById_whenEqualImdbId_thenReturnsMovie() throws JsonProcessingException, JsonPatchException {
+        ObjectId id = new ObjectId();
+        Movie movie = Movie.builder().id(id).title("movie to patch").imdbId("tt54321").build();
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movie));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(movieRepo.existsByImdbId("tt54321")).thenReturn(true);
         when(objectMapper.treeToValue(null, Movie.class)).thenReturn(movie);
         when(movieRepo.save(movie)).thenReturn(movie);
 
@@ -251,8 +395,8 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("Patch Movie by Id - Throws ImdbId in use")
-    void patchMovieById_thenThrowsImdbIdInUse() {
+    @DisplayName("Patch Movie by Id - Throws ImdbId in use by Movie")
+    void patchMovieById_thenThrowsImdbIdInUseByMovie() {
         ObjectId id = new ObjectId();
         Movie movie = Movie.builder().id(id).title("movie to patch").imdbId("tt12345").build();
         when(movieRepo.findById(id)).thenReturn(Optional.of(movie));
@@ -269,6 +413,30 @@ class MovieServiceTest {
         when(innerJnValue.asText()).thenReturn("tt54321");
 
         when(movieRepo.existsByImdbId("tt54321")).thenReturn(true);
+
+        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.patch(id, jsonPatch), "ErrorException was expected");
+        assertEquals("The imdbId passed is already in use", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Patch Movie by Id - Throws ImdbId in use by Series")
+    void patchMovieById_thenThrowsImdbIdInUseBySeries() {
+        ObjectId id = new ObjectId();
+        Movie movie = Movie.builder().id(id).title("movie to patch").imdbId("tt12345").build();
+        when(movieRepo.findById(id)).thenReturn(Optional.of(movie));
+
+        when(objectMapper.convertValue(jsonPatch, JsonNode.class)).thenReturn(jsonNode);
+
+        JsonNode innerJnPath = mock(JsonNode.class);
+        JsonNode innerJnValue = mock(JsonNode.class);
+
+        when(jsonNode.get(0)).thenReturn(jsonNode);
+        when(jsonNode.get("path")).thenReturn(innerJnPath);
+        when(innerJnPath.asText()).thenReturn("/imdbId");
+        when(jsonNode.get("value")).thenReturn(innerJnValue);
+        when(innerJnValue.asText()).thenReturn("tt54321");
+
+        when(seriesRepo.existsByImdbId("tt54321")).thenReturn(true);
 
         ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.patch(id, jsonPatch), "ErrorException was expected");
         assertEquals("The imdbId passed is already in use", thrown.getMessage());

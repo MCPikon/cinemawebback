@@ -86,6 +86,27 @@ class SeriesControllerTest {
     }
 
     @Test
+    @DisplayName("Find All Series By Title - OK (200)")
+    void findAllSeriesByTitle_thenReturnOk() throws Exception {
+        when(seriesService.findAllByTitle(series.getTitle())).thenReturn(seriesResDTOList);
+        mockMvc.perform(get("/api/v1/series/findAllByTitle/{title}", series.getTitle())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("series 1 test"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("Find All Series By Title - No Content (204)")
+    void findAllSeriesByTitle_thenReturnNotContent() throws Exception {
+        when(seriesService.findAllByTitle(series.getTitle())).thenThrow(
+                new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
+        mockMvc.perform(get("/api/v1/series/findAllByTitle/{title}", series.getTitle())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()).andDo(print());
+    }
+
+    @Test
     @DisplayName("Find Series By Id - OK (200)")
     void findSeriesById_thenReturnOk() throws Exception {
         when(seriesService.findById(series.getId())).thenReturn(Optional.of(series));

@@ -45,7 +45,23 @@ class SeriesRepositoryTest {
     }
 
     @Test
+    @Order(2)
+    @DisplayName("Find All Series By Title - Empty List")
+    void findAllByTitle_shouldGetEmpty() {
+        assertEquals(0, seriesRepo.findAllByTitle("search test").size());
+    }
+
+    @Test
     @Order(3)
+    @DisplayName("Find All Series By Title")
+    void findAllByTitle_shouldNotEmpty_and_getTwoSeries() {
+        List<Series> seriesList = seriesRepo.findAllByTitle("series");
+        assertFalse(seriesList.isEmpty());
+        assertEquals(2, seriesList.size());
+    }
+
+    @Test
+    @Order(4)
     @DisplayName("Save a Single Series")
     void save_thenReturnSavedSeries() {
         Series series = Series.builder().title("test").overview("a series test").build();
@@ -54,7 +70,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(3)
+    @Order(5)
     @DisplayName("Find By Id")
     void findById_shouldNotEmpty() {
         Series seriesSaved = seriesRepo.insert(Series.builder()
@@ -65,7 +81,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(4)
+    @Order(6)
     @DisplayName("Find By Id - Throw Not Found")
     void findById_shouldThrowNotFound() {
         Optional<Series> seriesFounded = seriesRepo.findById(new ObjectId());
@@ -73,7 +89,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(5)
+    @Order(7)
     @DisplayName("Find By ImdbId")
     void findByImdbId_shouldNotEmpty() {
         Series seriesSaved = seriesRepo.insert(Series.builder()
@@ -85,7 +101,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
     @DisplayName("Find By ImdbId - Throw Not Found")
     void findByImdbId_shouldThrowNotFound() {
         Optional<Series> seriesFounded = seriesRepo.findByImdbId("12345");
@@ -93,7 +109,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(7)
+    @Order(9)
     @DisplayName("Delete a single Series")
     void delete_shouldGetOk() {
         Series seriesToDelete = seriesRepo.findByImdbId("series_imdbId_test").orElseThrow();
@@ -103,7 +119,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(8)
+    @Order(10)
     @DisplayName("Exists by Id - True")
     void existsById_shouldGetTrue() {
         Series seriesSaved = seriesRepo.insert(Series.builder().title("series exists test").build());
@@ -111,14 +127,14 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(9)
+    @Order(11)
     @DisplayName("Exists by Id - False")
     void existsById_shouldGetFalse() {
         assertFalse(seriesRepo.existsById(new ObjectId()));
     }
 
     @Test
-    @Order(10)
+    @Order(12)
     @DisplayName("Exists by ImdbId - True")
     void existsByImdbId_shouldGetTrue() {
         Series seriesSaved = seriesRepo.insert(Series.builder().title("series exists test").imdbId("tt67890").build());
@@ -126,7 +142,7 @@ class SeriesRepositoryTest {
     }
 
     @Test
-    @Order(11)
+    @Order(13)
     @DisplayName("Exists by ImdbId - False")
     void existsByImdbId_shouldGetFalse() {
         assertFalse(seriesRepo.existsByImdbId("tt09876"));

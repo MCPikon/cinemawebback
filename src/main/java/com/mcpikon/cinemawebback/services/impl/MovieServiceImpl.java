@@ -55,6 +55,18 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    public List<MovieResponseDTO> findAllByTitle(String title) throws ErrorException {
+        log.info("GET movies /findAllByTitle executed");
+        if (title == null) title = "";
+        List<Movie> movies = movieRepo.findAllByTitle(title);
+        if (movies.isEmpty()) {
+            log.error(String.format("Error in movies /findAllByTitle with title: '%s' [%s]", title, EMPTY.getMessage()));
+            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
+        }
+        return movies.stream().map(DTOMapper::movieToResponseDTO).toList();
+    }
+
+    @Override
     public Optional<Movie> findById(ObjectId id) throws ErrorException {
         log.info("GET movies /findById executed");
         return Optional.ofNullable(movieRepo.findById(id).orElseThrow(() -> {

@@ -46,6 +46,22 @@ class MovieRepositoryTest {
 
     @Test
     @Order(2)
+    @DisplayName("Find All Movies By Title - Empty List")
+    void findAllByTitle_shouldGetEmpty() {
+        assertEquals(0, movieRepo.findAllByTitle("search test").size());
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("Find All Movies By Title")
+    void findAllByTitle_shouldNotEmpty_and_getTwoMovies() {
+        List<Movie> movieList = movieRepo.findAllByTitle("movie");
+        assertFalse(movieList.isEmpty());
+        assertEquals(2, movieList.size());
+    }
+
+    @Test
+    @Order(4)
     @DisplayName("Save a single Movie")
     void save_thenReturnSavedMovie() {
         Movie movie = Movie.builder().title("test").overview("a test movie").build();
@@ -54,7 +70,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(3)
+    @Order(5)
     @DisplayName("Find By Id")
     void findById_shouldNotEmpty() {
         Movie movieSaved = movieRepo.insert(Movie.builder()
@@ -65,7 +81,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(4)
+    @Order(6)
     @DisplayName("Find By Id - Throw Not Found")
     void findById_shouldThrowNotFound() {
         Optional<Movie> movieFounded = movieRepo.findById(new ObjectId());
@@ -73,7 +89,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(5)
+    @Order(7)
     @DisplayName("Find By ImdbId")
     void findByImdbId_shouldNotEmpty() {
         Movie movieSaved = movieRepo.insert(Movie.builder()
@@ -85,7 +101,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
     @DisplayName("Find By ImdbId - Throw Not Found")
     void findByImdbId_shouldThrowNotFound() {
         Optional<Movie> movieFounded = movieRepo.findByImdbId("12345");
@@ -93,7 +109,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(7)
+    @Order(9)
     @DisplayName("Delete a single Movie")
     void delete_shouldGetOk() {
         Movie movieToDelete = movieRepo.findByImdbId("movie_imdbId_test").orElseThrow();
@@ -103,7 +119,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(8)
+    @Order(10)
     @DisplayName("Exists by Id - True")
     void existsById_shouldGetTrue() {
         Movie movieSaved = movieRepo.insert(Movie.builder().title("movie exists test").build());
@@ -111,14 +127,14 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(9)
+    @Order(11)
     @DisplayName("Exists by Id - False")
     void existsById_shouldGetFalse() {
         assertFalse(movieRepo.existsById(new ObjectId()));
     }
 
     @Test
-    @Order(10)
+    @Order(12)
     @DisplayName("Exists by ImdbId - True")
     void existsByImdbId_shouldGetTrue() {
         Movie movieSaved = movieRepo.insert(Movie.builder().title("movie exists test").imdbId("tt12345").build());
@@ -126,7 +142,7 @@ class MovieRepositoryTest {
     }
 
     @Test
-    @Order(11)
+    @Order(13)
     @DisplayName("Exists by ImdbId - False")
     void existsByImdbId_shouldGetFalse() {
         assertFalse(movieRepo.existsByImdbId("tt54321"));

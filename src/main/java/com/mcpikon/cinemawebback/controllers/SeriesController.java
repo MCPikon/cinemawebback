@@ -44,6 +44,17 @@ public class SeriesController {
         return new ResponseEntity<>(seriesService.findAll(), HttpStatus.OK);
     }
 
+    @Operation(summary = "Fetch all series by title", description = "fetches all series and their data by title from data source")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful Operation",
+                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = SeriesResponseDTO.class)), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "Empty List")
+    })
+    @GetMapping({"/findAllByTitle", "/findAllByTitle/{title}"})
+    public ResponseEntity<List<SeriesResponseDTO>> findAllByTitle(@PathVariable(required = false) String title) {
+        return new ResponseEntity<>(seriesService.findAllByTitle(title), HttpStatus.OK);
+    }
+
     @Operation(summary = "Fetch series by id", description = "fetch a series and their data filtering by id key")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",

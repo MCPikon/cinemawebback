@@ -44,6 +44,17 @@ public class MovieController {
         return new ResponseEntity<>(movieService.findAll(), HttpStatus.OK);
     }
 
+    @Operation(summary = "Fetch all movies by title", description = "fetches all movies and their data by title from data source")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful Operation",
+                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = MovieResponseDTO.class)), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "Empty List")
+    })
+    @GetMapping({"/findAllByTitle", "/findAllByTitle/{title}"})
+    public ResponseEntity<List<MovieResponseDTO>> findAllByTitle(@PathVariable(required = false) String title) {
+        return new ResponseEntity<>(movieService.findAllByTitle(title), HttpStatus.OK);
+    }
+
     @Operation(summary = "Fetch movie by id", description = "fetch a movie and their data filtering by id key")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful Operation",
