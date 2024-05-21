@@ -56,7 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
         log.info("GET reviews /findAll executed");
         List<Review> reviews = reviewRepo.findAll();
         if (reviews.isEmpty()) {
-            log.error(String.format("Error in reviews /findAll [%s]", EMPTY.getMessage()));
+            log.warn(String.format("Warn in reviews /findAll [%s]", EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
         return reviews;
@@ -65,18 +65,17 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<Review> findAllByImdbId(String imdbId) throws ErrorException {
         log.info("GET reviews /findAllByImdbId executed");
-        final String errorLogMsg = "Error in reviews /findAllByImdbId with imdbId: '%s' [%s]";
         List<Review> reviews;
 
         if (movieRepo.existsByImdbId(imdbId)) reviews = movieRepo.findByImdbId(imdbId).orElseThrow().getReviewIds();
         else if (seriesRepo.existsByImdbId(imdbId)) reviews = seriesRepo.findByImdbId(imdbId).orElseThrow().getReviewIds();
         else {
-            log.error(String.format(errorLogMsg, imdbId, NOT_EXISTS.getMessage()));
+            log.error(String.format("Error in reviews /findAllByImdbId with imdbId: '%s' [%s]", imdbId, NOT_EXISTS.getMessage()));
             throw new ErrorException(NOT_EXISTS.getId(), NOT_EXISTS.getMessage(), NOT_EXISTS.getHttpStatus());
         }
 
         if (reviews.isEmpty()) {
-            log.error(String.format(errorLogMsg, imdbId, EMPTY.getMessage()));
+            log.warn(String.format("Warn in reviews /findAllByImdbId with imdbId: '%s' [%s]", imdbId, EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
         return reviews;

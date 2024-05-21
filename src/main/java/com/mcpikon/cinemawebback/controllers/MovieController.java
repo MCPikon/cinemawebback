@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,19 +39,8 @@ public class MovieController {
             @ApiResponse(responseCode = "204", description = "Empty List")
     })
     @GetMapping("/findAll")
-    public ResponseEntity<List<MovieResponseDTO>> findAll() {
-        return new ResponseEntity<>(movieService.findAll(), HttpStatus.OK);
-    }
-
-    @Operation(summary = "Fetch all movies by title", description = "fetches all movies and their data by title from data source")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful Operation",
-                    content = { @Content(array = @ArraySchema(schema = @Schema(implementation = MovieResponseDTO.class)), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "204", description = "Empty List")
-    })
-    @GetMapping({"/findAllByTitle", "/findAllByTitle/{title}"})
-    public ResponseEntity<List<MovieResponseDTO>> findAllByTitle(@PathVariable(required = false) String title) {
-        return new ResponseEntity<>(movieService.findAllByTitle(title), HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> findAll(@RequestParam(required = false) String title, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return new ResponseEntity<>(movieService.findAll(title, page, size), HttpStatus.OK);
     }
 
     @Operation(summary = "Fetch movie by id", description = "fetch a movie and their data filtering by id key")

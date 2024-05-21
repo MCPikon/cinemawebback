@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.PageRequest;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -48,14 +49,14 @@ class MovieRepositoryTest {
     @Order(2)
     @DisplayName("Find All Movies By Title - Empty List")
     void findAllByTitle_shouldGetEmpty() {
-        assertEquals(0, movieRepo.findAllByTitle("search test").size());
+        assertEquals(0, movieRepo.findAllByTitle("search test", PageRequest.of(0, 10)).getContent().size());
     }
 
     @Test
     @Order(3)
     @DisplayName("Find All Movies By Title")
     void findAllByTitle_shouldNotEmpty_and_getTwoMovies() {
-        List<Movie> movieList = movieRepo.findAllByTitle("movie");
+        List<Movie> movieList = movieRepo.findAllByTitle("movie", PageRequest.of(0, 10)).getContent();
         assertFalse(movieList.isEmpty());
         assertEquals(2, movieList.size());
     }

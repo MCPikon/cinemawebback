@@ -49,16 +49,17 @@ class SeriesControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private List<SeriesResponseDTO> seriesResDTOList;
+    private Map<String, Object> seriesRes;
     private Series series;
     private SeriesDTO seriesDTO;
     private List<Map<String, String>> jsonPatchMap;
 
     @BeforeEach
     void init() {
-        seriesResDTOList = List.of(
+        List<SeriesResponseDTO> seriesResDTOList = List.of(
                 SeriesResponseDTO.builder().imdbId("tt12345").title("series 1 test").build(),
                 SeriesResponseDTO.builder().imdbId("tt23456").title("series 2 test").build());
+        seriesRes = Map.of("series", seriesResDTOList, "currentPage", 0, "totalItems", 2, "totalPages", 1);
         series = Series.builder().id(new ObjectId()).imdbId("tt12345").title("series test").creator("test").numberOfSeasons(2).seasonList(List.of(new Series.Season())).build();
         seriesDTO = SeriesDTO.builder().imdbId("tt12345").title("series test").creator("test").numberOfSeasons(2).seasonList(List.of(new Series.Season())).build();
         jsonPatchMap = List.of(Map.of("op", "replace", "path", "/title", "value", "series test"));
@@ -67,41 +68,26 @@ class SeriesControllerTest {
     @Test
     @DisplayName("Find All Series - OK (200)")
     void findAllSeries_thenReturnOk() throws Exception {
-        when(seriesService.findAll()).thenReturn(seriesResDTOList);
+        when(seriesService.findAll("series", 0, 10)).thenReturn(seriesRes);
         mockMvc.perform(get("/api/v1/series/findAll")
+                        .param("title", "series")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("series 1 test"))
+                .andExpect(jsonPath("$.series[0].title").value("series 1 test"))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("Find All Series - No Content (204)")
     void findAllSeries_thenReturnNoContent() throws Exception {
-        when(seriesService.findAll()).thenThrow(
+        when(seriesService.findAll("test", 0, 10)).thenThrow(
                 new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
         mockMvc.perform(get("/api/v1/series/findAll")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent()).andDo(print());
-    }
-
-    @Test
-    @DisplayName("Find All Series By Title - OK (200)")
-    void findAllSeriesByTitle_thenReturnOk() throws Exception {
-        when(seriesService.findAllByTitle(series.getTitle())).thenReturn(seriesResDTOList);
-        mockMvc.perform(get("/api/v1/series/findAllByTitle/{title}", series.getTitle())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("series 1 test"))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("Find All Series By Title - No Content (204)")
-    void findAllSeriesByTitle_thenReturnNotContent() throws Exception {
-        when(seriesService.findAllByTitle(series.getTitle())).thenThrow(
-                new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
-        mockMvc.perform(get("/api/v1/series/findAllByTitle/{title}", series.getTitle())
+                        .param("title", "test")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent()).andDo(print());
     }

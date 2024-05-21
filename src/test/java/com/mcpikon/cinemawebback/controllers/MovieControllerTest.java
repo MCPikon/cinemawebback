@@ -49,16 +49,17 @@ class MovieControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private List<MovieResponseDTO> movieResDTOList;
+    private Map<String, Object> moviesRes;
     private Movie movie;
     private MovieDTO movieDTO;
     private List<Map<String, String>> jsonPatchMap;
 
     @BeforeEach
     void init() {
-        movieResDTOList = List.of(
+        List<MovieResponseDTO> movieResDTOList = List.of(
                 MovieResponseDTO.builder().imdbId("tt12345").title("movie 1 test").build(),
                 MovieResponseDTO.builder().imdbId("tt23456").title("movie 2 test").build());
+        moviesRes = Map.of("movies", movieResDTOList, "currentPage", 0, "totalItems", 2, "totalPages", 1);
         movie = Movie.builder().id(new ObjectId()).imdbId("tt12345").title("movie test").director("test").overview("movie to test").build();
         movieDTO = MovieDTO.builder().imdbId("tt12345").title("movie test").director("test").overview("movie to test").build();
         jsonPatchMap = List.of(Map.of("op", "replace", "path", "/title", "value", "movie test"));
@@ -67,41 +68,26 @@ class MovieControllerTest {
     @Test
     @DisplayName("Find All Movies - OK (200)")
     void findAllMovies_thenReturnOk() throws Exception {
-        when(movieService.findAll()).thenReturn(movieResDTOList);
+        when(movieService.findAll("movie", 0, 10)).thenReturn(moviesRes);
         mockMvc.perform(get("/api/v1/movies/findAll")
+                        .param("title", "movie")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("movie 1 test"))
+                .andExpect(jsonPath("$.movies[0].title").value("movie 1 test"))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("Find All Movies - No Content (204)")
     void findAllMovies_thenReturnNoContent() throws Exception {
-        when(movieService.findAll())
+        when(movieService.findAll("test", 0, 10))
                 .thenThrow(new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
         mockMvc.perform(get("/api/v1/movies/findAll")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent()).andDo(print());
-    }
-
-    @Test
-    @DisplayName("Find All Movies By Title - OK (200)")
-    void findAllMoviesByTitle_thenReturnOk() throws Exception {
-        when(movieService.findAllByTitle(movie.getTitle())).thenReturn(movieResDTOList);
-        mockMvc.perform(get("/api/v1/movies/findAllByTitle/{title}", movie.getTitle())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("movie 1 test"))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("Find All Movies By Title - No Content (204)")
-    void findAllMoviesByTitle_thenReturnNoContent() throws Exception {
-        when(movieService.findAllByTitle(movie.getTitle()))
-                .thenThrow(new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus()));
-        mockMvc.perform(get("/api/v1/movies/findAllByTitle/{title}", movie.getTitle())
+                        .param("title", "test")
+                        .param("page", "0")
+                        .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent()).andDo(print());
     }

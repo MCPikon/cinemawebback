@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.SeriesDTO;
-import com.mcpikon.cinemawebback.dtos.SeriesResponseDTO;
 import com.mcpikon.cinemawebback.exceptions.ErrorException;
 import com.mcpikon.cinemawebback.models.Review;
 import com.mcpikon.cinemawebback.models.Series;
@@ -18,10 +17,13 @@ import com.mcpikon.cinemawebback.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,26 +46,29 @@ public class SeriesServiceImpl implements SeriesService {
     private ObjectMapper objectMapper;
 
     @Override
-    public List<SeriesResponseDTO> findAll() throws ErrorException {
+    public Map<String, Object> findAll(String title, int page, int size) throws ErrorException {
         log.info("GET series /findAll executed");
-        List<Series> series = seriesRepo.findAll();
-        if (series.isEmpty()) {
-            log.error(String.format("Error in series /findAll [%s]", EMPTY.getMessage()));
-            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
-        }
-        return series.stream().map(DTOMapper::seriesToResponseDTO).toList();
-    }
+        if (page < 0) page = 0;
+        if (size <= 0) size = 1;
 
-    @Override
-    public List<SeriesResponseDTO> findAllByTitle(String title) throws ErrorException {
-        log.info("GET series /findAllByTitle executed");
-        if (title == null) title = "";
-        List<Series> series = seriesRepo.findAllByTitle(title);
+        Pageable paging = PageRequest.of(page, size);
+        Page<Series> series;
+
+        if (title == null) series = seriesRepo.findAll(paging);
+        else series = seriesRepo.findAllByTitle(title, paging);
+
         if (series.isEmpty()) {
-            log.error(String.format("Error in series /findAllByTitle with title: '%s' [%s]", title, EMPTY.getMessage()));
+            log.warn(String.format("Warn in series /findAll [%s]", EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
-        return series.stream().map(DTOMapper::seriesToResponseDTO).toList();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("series", series.getContent().stream().map(DTOMapper::seriesToResponseDTO).toList());
+        response.put("currentPage", series.getNumber());
+        response.put("totalItems", series.getTotalElements());
+        response.put("totalPages", series.getTotalPages());
+
+        return response;
     }
 
     @Override

@@ -21,11 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,40 +59,43 @@ class SeriesServiceTest {
     @Test
     @DisplayName("Find All Series - OK")
     void findAllSeries_thenReturnList() {
-        List<Series> seriesList = List.of(
+        List<SeriesResponseDTO> seriesResDTOList = Arrays.asList(
+                SeriesResponseDTO.builder().title("series 1").build(),
+                SeriesResponseDTO.builder().title("series 2").build());
+        List<Series> seriesList = Arrays.asList(
                 Series.builder().title("series 1").build(),
                 Series.builder().title("series 2").build());
-        when(seriesRepo.findAll()).thenReturn(seriesList);
-        List<SeriesResponseDTO> seriesFoundedList = seriesService.findAll();
-        assertNotNull(seriesFoundedList);
-        assertEquals(seriesList.size(), seriesFoundedList.size());
-    }
-
-    @Test
-    @DisplayName("Find All Series - Throws Empty List")
-    void findAllSeries_thenThrowsEmptyList() {
-        when(seriesRepo.findAll()).thenReturn(new ArrayList<>());
-        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.findAll(), "ErrorException was expected");
-        assertEquals("Empty List", thrown.getMessage());
+        Pageable paging = PageRequest.of(0, 10);
+        Page<Series> seriesPage = new PageImpl<>(seriesList, paging, seriesList.size());
+        when(seriesRepo.findAll(paging)).thenReturn(seriesPage);
+        Map<String, Object> seriesResMap = seriesService.findAll(null, 0, 10);
+        assertNotNull(seriesResMap);
+        assertEquals(seriesResDTOList, seriesResMap.get("series"));
     }
 
     @Test
     @DisplayName("Find All Series By Title - OK")
     void findAllSeriesByTitle_thenReturnList() {
-        List<Series> seriesList = List.of(
+        List<SeriesResponseDTO> seriesResDTOList = Arrays.asList(
+                SeriesResponseDTO.builder().title("series 1").build(),
+                SeriesResponseDTO.builder().title("series 2").build());
+        List<Series> seriesList = Arrays.asList(
                 Series.builder().title("series 1").build(),
                 Series.builder().title("series 2").build());
-        when(seriesRepo.findAllByTitle("")).thenReturn(seriesList);
-        List<SeriesResponseDTO> seriesFoundedList = seriesService.findAllByTitle(null);
-        assertNotNull(seriesFoundedList);
-        assertEquals(seriesList.size(), seriesFoundedList.size());
+        Pageable paging = PageRequest.of(0, 10);
+        Page<Series> seriesPage = new PageImpl<>(seriesList, paging, seriesList.size());
+        when(seriesRepo.findAllByTitle("series", paging)).thenReturn(seriesPage);
+        Map<String, Object> seriesResMap = seriesService.findAll("series", 0, 10);
+        assertNotNull(seriesResMap);
+        assertEquals(seriesResDTOList, seriesResMap.get("series"));
     }
 
     @Test
-    @DisplayName("Find All Series By Title - Throws Empty List")
-    void findAllSeriesByTitle_thenThrowsEmptyList() {
-        when(seriesRepo.findAllByTitle("test")).thenReturn(new ArrayList<>());
-        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.findAllByTitle("test"), "ErrorException was expected");
+    @DisplayName("Find All Series - Throws Empty List")
+    void findAllSeries_thenThrowsEmptyList() {
+        Pageable paging = PageRequest.of(0, 1);
+        when(seriesRepo.findAll(paging)).thenReturn(new PageImpl<>(new ArrayList<>(), paging, 0));
+        ErrorException thrown = assertThrows(ErrorException.class, () -> seriesService.findAll(null, -1, -1), "ErrorException was expected");
         assertEquals("Empty List", thrown.getMessage());
     }
 

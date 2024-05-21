@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.PageRequest;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -48,14 +49,14 @@ class SeriesRepositoryTest {
     @Order(2)
     @DisplayName("Find All Series By Title - Empty List")
     void findAllByTitle_shouldGetEmpty() {
-        assertEquals(0, seriesRepo.findAllByTitle("search test").size());
+        assertEquals(0, seriesRepo.findAllByTitle("search test", PageRequest.of(0, 10)).getContent().size());
     }
 
     @Test
     @Order(3)
     @DisplayName("Find All Series By Title")
     void findAllByTitle_shouldNotEmpty_and_getTwoSeries() {
-        List<Series> seriesList = seriesRepo.findAllByTitle("series");
+        List<Series> seriesList = seriesRepo.findAllByTitle("series", PageRequest.of(0, 10)).getContent();
         assertFalse(seriesList.isEmpty());
         assertEquals(2, seriesList.size());
     }

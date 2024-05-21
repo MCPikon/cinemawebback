@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.mcpikon.cinemawebback.dtos.MovieDTO;
-import com.mcpikon.cinemawebback.dtos.MovieResponseDTO;
 import com.mcpikon.cinemawebback.exceptions.ErrorException;
 import com.mcpikon.cinemawebback.models.Movie;
 import com.mcpikon.cinemawebback.models.Review;
@@ -18,10 +17,13 @@ import com.mcpikon.cinemawebback.utils.DTOMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,26 +46,29 @@ public class MovieServiceImpl implements MovieService {
     private ObjectMapper objectMapper;
 
     @Override
-    public List<MovieResponseDTO> findAll() throws ErrorException {
+    public Map<String, Object> findAll(String title, int page, int size) throws ErrorException {
         log.info("GET movies /findAll executed");
-        List<Movie> movies = movieRepo.findAll();
-        if (movies.isEmpty()) {
-            log.error(String.format("Error in movies /findAll [%s]", EMPTY.getMessage()));
-            throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
-        }
-        return movies.stream().map(DTOMapper::movieToResponseDTO).toList();
-    }
+        if (page < 0) page = 0;
+        if (size <= 0) size = 1;
 
-    @Override
-    public List<MovieResponseDTO> findAllByTitle(String title) throws ErrorException {
-        log.info("GET movies /findAllByTitle executed");
-        if (title == null) title = "";
-        List<Movie> movies = movieRepo.findAllByTitle(title);
+        Pageable paging = PageRequest.of(page, size);
+        Page<Movie> movies;
+
+        if (title == null) movies = movieRepo.findAll(paging);
+        else movies = movieRepo.findAllByTitle(title, paging);
+
         if (movies.isEmpty()) {
-            log.error(String.format("Error in movies /findAllByTitle with title: '%s' [%s]", title, EMPTY.getMessage()));
+            log.warn(String.format("Warn in movies /findAll [%s]", EMPTY.getMessage()));
             throw new ErrorException(EMPTY.getId(), EMPTY.getMessage(), EMPTY.getHttpStatus());
         }
-        return movies.stream().map(DTOMapper::movieToResponseDTO).toList();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("movies", movies.getContent().stream().map(DTOMapper::movieToResponseDTO).toList());
+        response.put("currentPage", movies.getNumber());
+        response.put("totalItems", movies.getTotalElements());
+        response.put("totalPages", movies.getTotalPages());
+
+        return response;
     }
 
     @Override

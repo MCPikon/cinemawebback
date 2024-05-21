@@ -21,6 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.*;
 
@@ -54,40 +58,43 @@ class MovieServiceTest {
     @Test
     @DisplayName("Find All Movies - OK")
     void findAllMovies_thenReturnList() {
-        List<Movie> movieList = new ArrayList<>(Arrays.asList(
+        List<MovieResponseDTO> movieResDTOList = Arrays.asList(
+                MovieResponseDTO.builder().title("movie 1").build(),
+                MovieResponseDTO.builder().title("movie 2").build());
+        List<Movie> movieList = Arrays.asList(
                 Movie.builder().title("movie 1").build(),
-                Movie.builder().title("movie 2").build()));
-        when(movieRepo.findAll()).thenReturn(movieList);
-        List<MovieResponseDTO> movieFoundedList = movieService.findAll();
-        assertNotNull(movieFoundedList);
-        assertEquals(movieList.size(), movieFoundedList.size());
-    }
-
-    @Test
-    @DisplayName("Find All Movies - Throws Empty List")
-    void findAllMovies_thenThrowsEmptyList() {
-        when(movieRepo.findAll()).thenReturn(new ArrayList<>());
-        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findAll(), "ErrorException was expected");
-        assertEquals("Empty List", thrown.getMessage());
+                Movie.builder().title("movie 2").build());
+        Pageable paging = PageRequest.of(0, 10);
+        Page<Movie> moviePage = new PageImpl<>(movieList, paging, movieList.size());
+        when(movieRepo.findAll(paging)).thenReturn(moviePage);
+        Map<String, Object> moviesResMap = movieService.findAll(null, 0, 10);
+        assertNotNull(moviesResMap);
+        assertEquals(movieResDTOList, moviesResMap.get("movies"));
     }
 
     @Test
     @DisplayName("Find All Movies By Title - OK")
     void findAllMoviesByTitle_thenReturnList() {
-        List<Movie> movieList = new ArrayList<>(Arrays.asList(
+        List<MovieResponseDTO> movieResDTOList = Arrays.asList(
+                MovieResponseDTO.builder().title("movie 1").build(),
+                MovieResponseDTO.builder().title("movie 2").build());
+        List<Movie> movieList = Arrays.asList(
                 Movie.builder().title("movie 1").build(),
-                Movie.builder().title("movie 2").build()));
-        when(movieRepo.findAllByTitle("")).thenReturn(movieList);
-        List<MovieResponseDTO> movieFoundedList = movieService.findAllByTitle(null);
-        assertNotNull(movieFoundedList);
-        assertEquals(movieList.size(), movieFoundedList.size());
+                Movie.builder().title("movie 2").build());
+        Pageable paging = PageRequest.of(0, 10);
+        Page<Movie> moviePage = new PageImpl<>(movieList, paging, movieList.size());
+        when(movieRepo.findAllByTitle("movie", paging)).thenReturn(moviePage);
+        Map<String, Object> moviesResMap = movieService.findAll("movie", 0, 10);
+        assertNotNull(moviesResMap);
+        assertEquals(movieResDTOList, moviesResMap.get("movies"));
     }
 
     @Test
-    @DisplayName("Find All Movies By Title - Empty List")
-    void findAllMoviesByTitle_thenReturnEmptyList() {
-        when(movieRepo.findAllByTitle("test")).thenReturn(new ArrayList<>());
-        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findAllByTitle("test"), "ErrorException was expected");
+    @DisplayName("Find All Movies - Throws Empty List")
+    void findAllMovies_thenThrowsEmptyList() {
+        Pageable paging = PageRequest.of(0, 1);
+        when(movieRepo.findAll(paging)).thenReturn(new PageImpl<>(new ArrayList<>(), paging, 0));
+        ErrorException thrown = assertThrows(ErrorException.class, () -> movieService.findAll(null, -1, -1), "ErrorException was expected");
         assertEquals("Empty List", thrown.getMessage());
     }
 
