@@ -31,7 +31,7 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("CinemaWebBack")
-                .version("1.0")
+                .version("1.1.0")
                 .description("An API of movies, series and it's reviews.")
                 .contact(contact)
                 .license(apacheLicense);
